@@ -1,0 +1,76 @@
+.gitignore
+  h_c76f4ec917e583 1-57
+Cargo.lock
+  h_c76f4ec917e583 1-717
+Cargo.toml
+  h_c76f4ec917e583 1-25
+LICENSE
+  h_c76f4ec917e583 1-21
+README.md
+  h_c76f4ec917e583 1-188
+crates/swarm-cli/Cargo.toml
+  h_c76f4ec917e583 1-19
+crates/swarm-cli/src/main.rs
+  h_c76f4ec917e583 1-190
+crates/swarm-core/Cargo.toml
+  h_c76f4ec917e583 1-14
+crates/swarm-core/src/integrator.rs
+  h_c76f4ec917e583 1-78
+crates/swarm-core/src/lib.rs
+  h_c76f4ec917e583 1-17
+crates/swarm-core/src/metrics.rs
+  h_c76f4ec917e583 1-92
+crates/swarm-core/src/models/mod.rs
+  h_c76f4ec917e583 1-5
+crates/swarm-core/src/models/nature2017_2d.rs
+  h_c76f4ec917e583 1-152
+crates/swarm-core/src/models/ring_1d.rs
+  h_c76f4ec917e583 1-130
+crates/swarm-core/src/types.rs
+  h_c76f4ec917e583 1-48
+data/.gitkeep
+  h_c76f4ec917e583 1
+docs/swarmalator_primer.md
+  h_c76f4ec917e583 1-72
+output/.gitkeep
+  h_c76f4ec917e583 1
+papers/00-template/README.md
+  h_c76f4ec917e583 1-75
+papers/1d-line/01-line-models/README.md
+  h_c76f4ec917e583 1-12
+papers/1d-ring/01-ring-states-pre2018/README.md
+  h_c76f4ec917e583 1-53
+papers/1d-ring/02-collective-ring-pre2022/README.md
+  h_c76f4ec917e583 1-17
+papers/1d-ring/03-non-identical-prl2022/README.md
+  h_c76f4ec917e583 1-16
+papers/1d-ring/04-distributed-couplings-pre2022/README.md
+  h_c76f4ec917e583 1-15
+papers/1d-ring/05-mixed-interactions-arxiv2023/README.md
+  h_c76f4ec917e583 1-14
+papers/1d-ring/06-pinning-transitions-arxiv2022/README.md
+  h_c76f4ec917e583 1-15
+papers/2d-plane/01-sync-and-swarm-natcomm2017/README.md
+  h_c76f4ec917e583 1-55
+papers/2d-plane/02-on-torus-pre2022/README.md
+  h_c76f4ec917e583 1-13
+papers/2d-plane/04-solvable-2d-arxiv2023/README.md
+  h_c76f4ec917e583 1-14
+python/animate.py
+  h_c76f4ec917e583 1-117
+python/plot_phases.py
+  h_c76f4ec917e583 1-114
+python/requirements.txt
+  h_c76f4ec917e583 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3fe124d53ce8460e0cccdf59c2da6e9592c91614",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
