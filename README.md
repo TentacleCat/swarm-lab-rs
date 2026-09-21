@@ -56,6 +56,7 @@
 | 10 | [Diverse behaviors in swarmalator systems](https://www.nature.com/articles/s41467-023-36563-4) | *Nature Comms* 2023 | 📄 [打开 PDF](papers/2d-plane/06-diverse-behaviors-natcomm2023/paper.pdf) | [`papers/2d-plane/06-diverse-behaviors`](papers/2d-plane/06-diverse-behaviors-natcomm2023/) | ⚡ [`10_natcomm2023_diverse_behaviors.rs`](crates/swarm-cli/examples/10_natcomm2023_diverse_behaviors.rs) |
 | 11 | [Solvable model of driven matter with pinning](https://arxiv.org/abs/2306.09589) | *arXiv* 2023 | 📄 [打开 PDF](papers/1d-ring/07-driven-matter-pinning-arxiv2023/paper.pdf) | [`papers/1d-ring/07-driven-matter`](papers/1d-ring/07-driven-matter-pinning-arxiv2023/) | ⚡ 参考 07 实验扩展 |
 | 12 | [Swarmalators with delayed interactions](https://arxiv.org/abs/2210.11417) | *arXiv* 2022 | 📄 [打开 PDF](papers/delayed-interactions/paper.pdf) | [`papers/delayed-interactions`](papers/delayed-interactions/) | ⚡ 参考时滞扩展 |
+| 13 | [Microscopic activity patterns in the Naming Game](https://arxiv.org/abs/cond-mat/0606125) | *J. Phys. A* 2006 | 📄 [打开 PDF](papers/naming-game/01-microscopic-activity-condmat2006/paper.pdf) | [`papers/naming-game/01-microscopic-activity`](papers/naming-game/01-microscopic-activity-condmat2006/) | ⚡ [`11_condmat2006_naming_game_activity.rs`](crates/swarm-cli/examples/11_condmat2006_naming_game_activity.rs) |
 
 ---
 

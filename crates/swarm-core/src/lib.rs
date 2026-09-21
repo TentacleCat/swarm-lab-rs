@@ -8,6 +8,7 @@
 pub mod integrator;
 pub mod metrics;
 pub mod models;
+pub mod naming_game;
 pub mod reference;
 pub mod types;
 

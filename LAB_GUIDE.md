@@ -13,13 +13,18 @@ crates/swarm-core/src/
 │   ├── metrics.rs
 │   ├── integrator.rs
 │   ├── nature2017_2d.rs
-│   └── ring_1d.rs
+│   ├── ring_1d.rs
+│   └── naming_game.rs
 │
 ├── metrics.rs        # 🎯 [实战关卡 1] 切片借用与序参量计算 (从这里开始！)
 ├── integrator.rs     # 🎯 [实战关卡 2] 可变借用、内存复用与 RK4 积分器
-└── models/
-    ├── nature2017_2d.rs  # 🎯 [实战关卡 3] 2017 Nature Comms 2D 经典模型
-    └── ring_1d.rs        # 🎯 [实战关卡 4] 2018 PRE 一维圆环模型
+├── models/
+│   ├── nature2017_2d.rs  # 🎯 [实战关卡 3] 2017 Nature Comms 2D 经典模型
+│   └── ring_1d.rs        # 🎯 [实战关卡 4] 2018 PRE 一维圆环模型
+└── naming_game/      # 🎯 [实战关卡 6] 2006 Naming Game 命名博弈与微观动力学 (离散复杂网络)
+    ├── metrics.rs    # 宏观 Nw, Nd 与微观度分布 P_n(k)
+    ├── model.rs      # Direct Naming Game 谈判更新规则
+    └── network.rs    # 完全图、ER 随机图、BA 无标度网络拓扑
 ```
 
 ---
@@ -101,6 +106,33 @@ crates/swarm-core/src/
 1. 引入 `rayon::prelude::*`；
 2. 将最外层粒子循环 `(0..n)` 改为 `(0..n).into_par_iter()`；
 3. 亲身体验在无需加锁（Mutex）的情况下，多核 CPU 瞬间跑满、提速 10 倍的震撼快感。
+
+---
+
+### 🎯 关卡 6: 离散多智能体博弈与微观统计动力学（2006 Naming Game 命名博弈）
+- **论文**: *"Microscopic activity patterns in the Naming Game"*, L. Dall'Asta, A. Baronchelli, [cond-mat/0606125](https://arxiv.org/abs/cond-mat/0606125)
+- **本地文档**: [`papers/naming-game/01-microscopic-activity-condmat2006/README.md`](papers/naming-game/01-microscopic-activity-condmat2006/README.md)
+- **代码文件**:
+  - 宏观与微观度分布计算: [`crates/swarm-core/src/naming_game/metrics.rs`](crates/swarm-core/src/naming_game/metrics.rs)
+  - Direct 博弈单步状态机: [`crates/swarm-core/src/naming_game/model.rs`](crates/swarm-core/src/naming_game/model.rs)
+- **学习的核心 Rust 语法**:
+  1. **集合容器**: `std::collections::HashSet` 与其集合操作（`insert`, `contains`, `clear`）；
+  2. **泛型结构体与 Trait 约束**: `struct NamingGame<G: Network>`；
+  3. **随机抽样与离散事件逻辑**: 从 `HashSet` 迭代器中随机抽词并根据谈判结果更新；
+  4. **有序映射与直方图归一化**: 使用 `BTreeMap<usize, f64>` 构建无偏离散概率分布 $\mathcal{P}_n(k | t)$。
+- **任务目标**:
+  1. 在 `metrics.rs` 中实现 `total_words`, `distinct_words`, `inventory_size_distribution`, `is_consensus`；
+  2. 在 `model.rs` 中实现 `NamingGame::step` 的 4 步谈判交互规则。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- naming_game::tests
+  ```
+  *(当看到 `test result: ok. 5 passed` 时，即通关本卡！)*
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 11_condmat2006_naming_game_activity
+  ```
+  *(程序运行完毕后会自动调用 Python，生成 `output/naming_game_macro.png` 与 `output/naming_game_micro.png`，完美复现原论文图 1、图 3、图 5！)*
 
 ---
 
