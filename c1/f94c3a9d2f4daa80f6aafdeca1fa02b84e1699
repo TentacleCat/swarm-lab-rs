@@ -1,0 +1,14 @@
+pyproject.toml
+  h_c76f4ec917e583 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c1f94c3a9d2f4daa80f6aafdeca1fa02b84e1699",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
