@@ -4,6 +4,7 @@ members = [
     "crates/swarm-core",
     "crates/swarm-cli",
 ]
+default-members = ["crates/swarm-cli"]
 
 [workspace.package]
 version = "0.1.0"
