@@ -1,0 +1,15 @@
+[project]
+name = "swarm-lab-viz"
+version = "0.1.0"
+description = "Visualization and scientific plotting suite for Swarm-Lab-RS"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib>=3.7.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+]
+
+[tool.uv]
+package = false
