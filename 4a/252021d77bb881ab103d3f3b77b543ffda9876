@@ -1,0 +1,38 @@
+LAB_GUIDE.md
+  h_c76f4ec917e583 1-120
+crates/swarm-cli/examples/01_natcomm2017_oscillators_sync_and_swarm.rs
+  h_c76f4ec917e583 12-16,19-23
+crates/swarm-cli/examples/02_pre2018_ring_states.rs
+  h_c76f4ec917e583 12-16,19-23
+crates/swarm-core/src/integrator.rs
+  h_c76f4ec917e583 1-14,17-49,70-87,89-92,94-100,102-103,105,107-112,114-115,118-120,123-128,130-132,135-137
+crates/swarm-core/src/lib.rs
+  h_c76f4ec917e583 3-6,11,14
+crates/swarm-core/src/metrics.rs
+  h_c76f4ec917e583 1-23,25-30,33-37,39-40,43-51,53-55,58-62,64-65,75,78,83,86,91,96-97
+crates/swarm-core/src/models/nature2017_2d.rs
+  h_c76f4ec917e583 1-14,16,20,24,26,28,30,40,51,58-60,75-77,79-102
+crates/swarm-core/src/models/ring_1d.rs
+  h_c76f4ec917e583 1-13,21,25,27,29,31,54,74-76,78-83
+crates/swarm-core/src/reference/integrator.rs
+  h_c76f4ec917e583 1-79
+crates/swarm-core/src/reference/metrics.rs
+  h_c76f4ec917e583 1-57
+crates/swarm-core/src/reference/mod.rs
+  h_c76f4ec917e583 1-9
+crates/swarm-core/src/reference/nature2017_2d.rs
+  h_c76f4ec917e583 1-140
+crates/swarm-core/src/reference/ring_1d.rs
+  h_c76f4ec917e583 1-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4a252021d77bb881ab103d3f3b77b543ffda9876",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
