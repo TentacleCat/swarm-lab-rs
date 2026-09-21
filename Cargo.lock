@@ -484,6 +484,7 @@ dependencies = [
  "csv",
  "indicatif",
  "rand",
+ "rand_distr",
  "serde",
  "serde_json",
  "swarm-core",
