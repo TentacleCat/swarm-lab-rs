@@ -9,8 +9,18 @@ use std::fs::File;
 use std::process::Command;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+// =========================================================================
+// 💡 模式切换：
+// 1. 默认使用你在 swarm_core 中亲手实现的算法
+// 2. 若想先看效果或卡壳对比，可取消注释下方的 reference 引用：
+// =========================================================================
 use swarm_core::integrator::Rk4Integrator;
 use swarm_core::models::Swarmalator2D;
+
+// 参考答案引用（需要时取消注释）：
+// use swarm_core::reference::integrator::Rk4Integrator;
+// use swarm_core::reference::nature2017_2d::Swarmalator2D;
+
 use swarm_core::types::DynamicalSystem;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

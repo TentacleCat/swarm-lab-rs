@@ -1,34 +1,19 @@
-//! # 🎯 [实战关卡 4] 2018 PRE 经典一维圆环模型
-//!
-//! 论文: "Ring states in swarmalator systems"
-//! 本地 PDF: papers/1d-ring/01-ring-states-pre2018/paper.pdf
-//!
-//! 在这里你将学习并练习：
-//! - 圆环拓扑下极角 $\phi_i$ 与相位 $\theta_i$ 的双向耦合
-//! - 紧凑状态数组管理 ($2N$ 维向量)
-//!
-//! 遇到卡壳可查阅参考答案: `crates/swarm-core/src/reference/ring_1d.rs`
+//! [Reference] 2018 PRE 1D 圆环模型标准参考实现
 
-#![allow(unused_variables, dead_code)]
-
-use crate::metrics::{
+use crate::reference::metrics::{
     kuramoto_order_parameter, ring_spatial_order_parameter, ring_spatiotemporal_order_parameters,
 };
 use crate::types::{wrap_to_pi, DynamicalSystem, MetricsSnapshot};
 use rand::Rng;
 use rand_distr::{Distribution, Uniform};
+use rayon::prelude::*;
 
-/// 1D Swarmalator 圆环模型
 #[derive(Clone, Debug)]
 pub struct SwarmalatorRing1D {
     pub n: usize,
-    /// 空间耦合参数 J
     pub j: f64,
-    /// 相位耦合参数 K
     pub k: f64,
-    /// 空间漂移速度 nu_i
     pub nu: Vec<f64>,
-    /// 自然频率 omega_i
     pub omega: Vec<f64>,
 }
 
@@ -51,7 +36,6 @@ impl SwarmalatorRing1D {
         self
     }
 
-    /// 均匀随机初态: phi in [-pi, pi), theta in [-pi, pi)
     pub fn random_initial_state<R: Rng>(&self, rng: &mut R) -> Vec<f64> {
         let dist = Uniform::new(-std::f64::consts::PI, std::f64::consts::PI);
         let mut state = vec![0.0; 2 * self.n];
@@ -71,16 +55,45 @@ impl DynamicalSystem for SwarmalatorRing1D {
         self.n
     }
 
-    /// ## 控制微分方程 (RHS):
-    /// $$\dot{\phi}_i = \nu_i + \frac{1}{N} \sum_{j=1}^N \sin(\phi_j - \phi_i)(1 + J \cos(\theta_j - \theta_i))$$
-    /// $$\dot{\theta}_i = \omega_i + \frac{K}{N} \sum_{j=1}^N \sin(\theta_j - \theta_i)(1 + J \cos(\phi_j - \phi_i))$$
     fn derivative(&self, s: &[f64], ds: &mut [f64]) {
-        // TODO: 请实现 1D 圆环模型的微分方程计算
-        // 步骤提示:
-        // let phi = &s[0..n];
-        // let theta = &s[n..2*n];
-        // 双重循环累加每个粒子受到的 sin(...) * (1 + J * cos(...))
-        todo!("【实战关卡 4】请在此处实现 1D 圆环 Swarmalator 的运动微分方程");
+        let n = self.n;
+        let phi = &s[0..n];
+        let theta = &s[n..2 * n];
+
+        let inv_n = 1.0 / (n as f64);
+        let j_param = self.j;
+        let k_param = self.k;
+        let nu = &self.nu;
+        let omega = &self.omega;
+
+        let (dphi, dtheta) = ds.split_at_mut(n);
+
+        (0..n).into_par_iter().map(|i| {
+            let phii = phi[i];
+            let thi = theta[i];
+
+            let mut sum_phi = 0.0;
+            let mut sum_th = 0.0;
+
+            for j in 0..n {
+                let dphi_ji = phi[j] - phii;
+                let dth_ji = theta[j] - thi;
+
+                sum_phi += dphi_ji.sin() * (1.0 + j_param * dth_ji.cos());
+                sum_th += dth_ji.sin() * (1.0 + j_param * dphi_ji.cos());
+            }
+
+            let dphi_i = nu[i] + inv_n * sum_phi;
+            let dth_i = omega[i] + (k_param * inv_n) * sum_th;
+
+            (dphi_i, dth_i)
+        }).collect::<Vec<_>>()
+        .into_iter()
+        .enumerate()
+        .for_each(|(i, (dp, dt))| {
+            dphi[i] = dp;
+            dtheta[i] = dt;
+        });
     }
 
     fn metrics(&self, s: &[f64]) -> MetricsSnapshot {
