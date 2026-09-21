@@ -1,0 +1,18 @@
+Cargo.toml
+  h_c76f4ec917e583 7
+crates/swarm-cli/examples/01_nature2017_phase_wave.rs
+  h_c76f4ec917e583 1-113
+crates/swarm-cli/examples/02_pre2018_ring_wave.rs
+  h_c76f4ec917e583 1-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f662422a1c359e823362e14f53cdd8d507118e1c",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
