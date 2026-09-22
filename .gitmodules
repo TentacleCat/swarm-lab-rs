@@ -1,0 +1,3 @@
+[submodule "submodules/AggregatingSwarms2026"]
+	path = submodules/AggregatingSwarms2026
+	url = https://github.com/jeremyaqp/AggregatingSwarms2026

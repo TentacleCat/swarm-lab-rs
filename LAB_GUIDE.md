@@ -43,15 +43,18 @@ crates/swarm-core/src/
 │   ├── edge_detector.rs # 局域加权邻居之比自适应外边缘探测器
 │   ├── robot.rs      # Kilobot 三态行为状态机 (Wait / Orbit / Follow) 与斑点捕获
 │   └── simulator.rs  # 多智能体连续空间世界、轮廓环绕物理运动学与截肢自愈再生
-└── heterogeneous_swarms/ # 🎯 [实战关卡 12] 2024 Springer/PPSN 异构演化群体与表型可塑性
-    ├── environment.rs    # 30x30m 竞技场、4 大标量光强场 (Center, Bimodal, Linear, Banana)
-    ├── sensors.rs        # 4 象限 360° 方位与相对航向感知、无邻居默认值与光强归一化
-    ├── controller.rs     # 冻结隐层储备池 (Reservoir NN) 与 36 维全基因型协同表达
-    ├── robot.rs          # Thymio II 差速驱动动力学、硬核排斥碰撞与边界约束
-    ├── regulatory.rs     # 去中心化局域光强概率状态机 (P_green 调控表型可塑性)
-    ├── metrics.rs        # 累积光强适应度 f 与群体运动对齐序参量 \Phi
-    ├── cma_es.rs         # 协方差矩阵自适应进化策略 (CMA-ES) 优化器
-    └── simulator.rs      # 10Hz 多智能体高精度仿真引擎与评测流水线
+├── heterogeneous_swarms/ # 🎯 [实战关卡 12] 2024 Springer/PPSN 异构演化群体与表型可塑性
+│   ├── environment.rs    # 30x30m 竞技场、4 大标量光强场 (Center, Bimodal, Linear, Banana)
+│   ├── sensors.rs        # 4 象限 360° 方位与相对航向感知、无邻居默认值与光强归一化
+│   ├── controller.rs     # 冻结隐层储备池 (Reservoir NN) 与 36 维全基因型协同表达
+│   ├── robot.rs          # Thymio II 差速驱动动力学、硬核排斥碰撞与边界约束
+│   ├── regulatory.rs     # 去中心化局域光强概率状态机 (P_green 调控表型可塑性)
+│   ├── metrics.rs        # 累积光强适应度 f 与群体运动对齐序参量 \Phi
+│   ├── cma_es.rs         # 协方差矩阵自适应进化策略 (CMA-ES) 优化器
+│   └── simulator.rs      # 10Hz 多智能体高精度仿真引擎与评测流水线
+└── morphological_swarms/ # 🎯 [实战关卡 13] 2026 arXiv 形态计算与自对齐聚集 (Sweet Spot & MIPS)
+    ├── model.rs      # 周期性边界、WCA 软排斥碰撞、速度弛豫与形态自对齐力矩更新
+    └── metrics.rs    # 光照成核聚集率 N_circ / N 与宏观极化对齐度 <Psi>
 ```
 
 ---
@@ -332,6 +335,36 @@ crates/swarm-core/src/
   uv run python python/plot_heterogeneous_swarms.py
   ```
   *(生成 `output/heterogeneous_swarms_learning_curves.png`、`output/heterogeneous_swarms_subgroup_ratios.png`、`output/heterogeneous_swarms_scalability_robustness.png` 与 `output/heterogeneous_swarms_trajectories.png`)*
+
+---
+
+### 🎯 关卡 13: 形态计算与自对齐聚集 (Morphological Computing & MIPS Phototaxis)
+- **代码文件**:
+  - 物理模型与周期性边界: [`crates/swarm-core/src/morphological_swarms/model.rs`](crates/swarm-core/src/morphological_swarms/model.rs)
+  - 宏观序参量与团簇网络: [`crates/swarm-core/src/morphological_swarms/metrics.rs`](crates/swarm-core/src/morphological_swarms/metrics.rs)
+- **学习的核心物理与形态学计算机制**:
+  1. **形态计算（Morphological Computation）与非对称受力**:
+     - 机器人机身外骨骼的非对称摩擦与质量分布，在遭遇物理接触力时产生自发偏转力矩；
+     - 仅依靠 1:15 间歇启闭（PWM 占空比降低速度至 $v_\circ / v_\bullet = 1/3$），**单机器人无法独立停在光照区**，完全依赖形态力矩诱发群体动力学聚集。
+  2. **向量三重积力矩与转向微分动力学**:
+     - 动力学控制方程：$\tau_n \dot{\vec{n}} = \epsilon (\vec{n} \times \vec{v}) \times \vec{n} + \sqrt{2D} \xi \vec{n}_{\perp}$；
+     - 2D 向量化实现：$\dot{n}_x \propto \kappa (n_y^2 v_x - n_x n_y v_y)$，$\dot{n}_y \propto \kappa (n_x^2 v_y - n_x n_y v_x)$；
+     - Aligner ($\kappa > 0$) 碰撞同向对齐 $\to$ 极化游弋流（Flocking，$\langle \Psi \rangle > 0.8$）；
+     - Fronter ($\kappa < 0$) 碰撞反向咬合 $\to$ 瞬时速度衰减至零。
+  3. **形态“甜点区 (Sweet Spot)”与相变相图**:
+     - 弱逆对齐 ($\kappa > -0.6$)：成核不足以抗衡噪声，聚集率接近随机游走基线 0.18；
+     - 强逆对齐 ($\kappa < -2.2$)：在全场（包括暗区）发生碰撞冷冻死锁，导致反向趋光；
+     - 最佳甜点区 ($\kappa \in [-2.0, -0.6]$)：碰撞减速与光照区慢行形成正反馈，通过动力学诱导相分离（MIPS）在光照区涌现出高达 40% 的自发聚集。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- morphological_swarms
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 18_arxiv2026_morphological_aggregating_swarms
+  uv run python python/plot_morphological_aggregating_swarms.py
+  ```
+  *(生成 `output/morphological_swarms_phase_diagram.png` 与 `output/morphological_swarms_spatial_snapshots.png`)*
 
 ---
 
