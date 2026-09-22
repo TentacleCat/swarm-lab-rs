@@ -38,11 +38,20 @@ crates/swarm-core/src/
 │   ├── state.rs      # Moore 邻域 8 方向、256 局部状态位域与单纯形分类 (Simplicial Vertex)
 │   ├── policy.rs     # 离线全策略综合、碰撞与拓扑连通保持、方向与频次启发式矩阵
 │   └── simulator.rs  # 异步离散格点世界、多智能体非阻塞步进与目标构型自组织收敛
-└── turing_morphogenesis/ # 🎯 [实战关卡 11] 2018 Science Robotics 反应-扩散与群体形态发生
-    ├── morphogen.rs  # 激活子-抑制子分段线性动力学、通信图拉普拉斯与 LED 浓度映射
-    ├── edge_detector.rs # 局域加权邻居之比自适应外边缘探测器
-    ├── robot.rs      # Kilobot 三态行为状态机 (Wait / Orbit / Follow) 与斑点捕获
-    └── simulator.rs  # 多智能体连续空间世界、轮廓环绕物理运动学与截肢自愈再生
+├── turing_morphogenesis/ # 🎯 [实战关卡 11] 2018 Science Robotics 反应-扩散与群体形态发生
+│   ├── morphogen.rs  # 激活子-抑制子分段线性动力学、通信图拉普拉斯与 LED 浓度映射
+│   ├── edge_detector.rs # 局域加权邻居之比自适应外边缘探测器
+│   ├── robot.rs      # Kilobot 三态行为状态机 (Wait / Orbit / Follow) 与斑点捕获
+│   └── simulator.rs  # 多智能体连续空间世界、轮廓环绕物理运动学与截肢自愈再生
+└── heterogeneous_swarms/ # 🎯 [实战关卡 12] 2024 Springer/PPSN 异构演化群体与表型可塑性
+    ├── environment.rs    # 30x30m 竞技场、4 大标量光强场 (Center, Bimodal, Linear, Banana)
+    ├── sensors.rs        # 4 象限 360° 方位与相对航向感知、无邻居默认值与光强归一化
+    ├── controller.rs     # 冻结隐层储备池 (Reservoir NN) 与 36 维全基因型协同表达
+    ├── robot.rs          # Thymio II 差速驱动动力学、硬核排斥碰撞与边界约束
+    ├── regulatory.rs     # 去中心化局域光强概率状态机 (P_green 调控表型可塑性)
+    ├── metrics.rs        # 累积光强适应度 f 与群体运动对齐序参量 \Phi
+    ├── cma_es.rs         # 协方差矩阵自适应进化策略 (CMA-ES) 优化器
+    └── simulator.rs      # 10Hz 多智能体高精度仿真引擎与评测流水线
 ```
 
 ---
@@ -287,6 +296,42 @@ crates/swarm-core/src/
   uv run python python/plot_turing_morphogenesis.py
   ```
   *(生成 `output/turing_morphogenesis_snapshots.png` 与 `output/turing_morphogenesis_metrics.png`)*
+
+---
+
+### 🎯 关卡 12: 异构群体演化与表型可塑性集体感知 (2024 Springer/PPSN Heterogeneous Swarms)
+- **论文**: *"Emergence of Specialised Collective Behaviors in Evolving Heterogeneous Swarms"*, Fuda van Diggelen, Matteo de Carlo, Nicolas Cambier, Eliseo Ferrante, A. E. Eiben (*PPSN XVIII 2024*, Springer LNCS 14965, [DOI: 10.1007/978-3-031-70068-2_4](https://doi.org/10.1007/978-3-031-70068-2_4), [arXiv:2402.04763](https://arxiv.org/abs/2402.04763))
+- **本地文档**: [`papers/heterogeneous-swarms/01-specialised-collective-behaviors-springer2024/README.md`](papers/heterogeneous-swarms/01-specialised-collective-behaviors-springer2024/README.md)
+- **代码文件**:
+  - 竞技场与标量光强场: [`crates/swarm-core/src/heterogeneous_swarms/environment.rs`](crates/swarm-core/src/heterogeneous_swarms/environment.rs)
+  - 4 象限受限感知系统: [`crates/swarm-core/src/heterogeneous_swarms/sensors.rs`](crates/swarm-core/src/heterogeneous_swarms/sensors.rs)
+  - 储备池神经网络与基因型: [`crates/swarm-core/src/heterogeneous_swarms/controller.rs`](crates/swarm-core/src/heterogeneous_swarms/controller.rs)
+  - Thymio II 动力学与碰撞: [`crates/swarm-core/src/heterogeneous_swarms/robot.rs`](crates/swarm-core/src/heterogeneous_swarms/robot.rs)
+  - 在线表型可塑性调控: [`crates/swarm-core/src/heterogeneous_swarms/regulatory.rs`](crates/swarm-core/src/heterogeneous_swarms/regulatory.rs)
+  - 适应度与对齐序参量: [`crates/swarm-core/src/heterogeneous_swarms/metrics.rs`](crates/swarm-core/src/heterogeneous_swarms/metrics.rs)
+  - CMA-ES 进化优化器: [`crates/swarm-core/src/heterogeneous_swarms/cma_es.rs`](crates/swarm-core/src/heterogeneous_swarms/cma_es.rs)
+  - 高精度群体仿真引擎: [`crates/swarm-core/src/heterogeneous_swarms/simulator.rs`](crates/swarm-core/src/heterogeneous_swarms/simulator.rs)
+- **学习的核心物理与进化算法机制**:
+  1. **无显式通信下的分工涌现 (Division of Labor without Communication)**:
+     - 仅依靠群体级累积光强适应度 $f = \frac{\sum l_t}{G_{\max} T}$ 引导进化，控制器无记忆、无领航者、不知晓分工；
+  2. **储备池计算与协同进化 (Reservoir Neural Network & CMA-ES)**:
+     - 随机隐层权重生成后严格冻结，CMA-ES 仅演化输出层 18 维权重（双子群共 36 维全基因型）；
+  3. **子群专门化协同效应 (Table 3 复现)**:
+     - 绿色子群（Exploitative 剥削利用型）在强光区高密度聚集；红色子群（Exploratory 探索协调型）在弱光区高对齐度巡航；
+     - 远距离均质混合比例（2:2 / 1:3）显著优于单一极端子群（4:0 / 0:4），呈现 $1+1 > 2$ 的协同涌现；
+  4. **去中心化在线表型可塑性调控 (Table 4 复现)**:
+     - 依据局域标量光强以概率 $P_{\text{green}}(\text{light})$ 每 5.0s 动态重抽样表达控制器；
+     - 在群体可扩展性（$N = 10, 20, 50$）与跨环境鲁棒性（Center, Bi-modal, Linear, Banana）中全面超越同质基准。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- heterogeneous_swarms
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 17_springer2024_heterogeneous_swarms
+  uv run python python/plot_heterogeneous_swarms.py
+  ```
+  *(生成 `output/heterogeneous_swarms_learning_curves.png`、`output/heterogeneous_swarms_subgroup_ratios.png`、`output/heterogeneous_swarms_scalability_robustness.png` 与 `output/heterogeneous_swarms_trajectories.png`)*
 
 ---
 

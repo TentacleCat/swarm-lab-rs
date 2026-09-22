@@ -8,4 +8,5 @@ pub mod metrics;
 pub mod nature2017_2d;
 pub mod naming_game;
 pub mod ring_1d;
+pub mod heterogeneous_swarms;
 

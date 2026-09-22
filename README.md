@@ -62,6 +62,7 @@
 | 16 | [Modeling ant foraging: a chemotaxis approach with pheromones and trail formation](https://arxiv.org/abs/1409.3808) | *J. Theor. Biol.* 2015 | 📄 [打开 PDF](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/paper.pdf) | [`papers/ant-foraging/01-chemotaxis-trail-formation`](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/) | ⚡ [`14_arxiv1409_ant_chemotaxis_foraging.rs`](crates/swarm-cli/examples/14_arxiv1409_ant_chemotaxis_foraging.rs) |
 | 17 | [Provable self-organizing pattern formation by a swarm of robots with limited knowledge](https://doi.org/10.1007/s11721-019-00163-0) | *Swarm Intelligence* 2019 | 📄 [打开 PDF](papers/swarm-robotics/01-provable-pattern-formation-swarm-intel2019/paper.pdf) | [`papers/swarm-robotics/01-provable-pattern-formation`](papers/swarm-robotics/01-provable-pattern-formation-swarm-intel2019/) | ⚡ [`15_springer2019_swarm_robotics_pattern_formation.rs`](crates/swarm-cli/examples/15_springer2019_swarm_robotics_pattern_formation.rs) |
 | 18 | [Morphogenesis in robot swarms](https://doi.org/10.1126/scirobotics.aau9178) | *Science Robotics* 2018 | 💻 [参考源码](papers/turing-morphogenesis/01-morphogenesis-scirobotics2018/reference/README.md) | [`papers/turing-morphogenesis/01-morphogenesis`](papers/turing-morphogenesis/01-morphogenesis-scirobotics2018/) | ⚡ [`16_scirobotics2018_turing_morphogenesis.rs`](crates/swarm-cli/examples/16_scirobotics2018_turing_morphogenesis.rs) |
+| 19 | [Emergence of Specialised Collective Behaviors in Evolving Heterogeneous Swarms](https://doi.org/10.1007/978-3-031-70068-2_4) | *PPSN XVIII* 2024 / Springer | 📄 [arXiv:2402.04763](https://arxiv.org/abs/2402.04763) | [`papers/heterogeneous-swarms`](papers/heterogeneous-swarms/01-specialised-collective-behaviors-springer2024/) | ⚡ [`17_springer2024_heterogeneous_swarms.rs`](crates/swarm-cli/examples/17_springer2024_heterogeneous_swarms.rs) |
 
 
 ---
@@ -90,10 +91,11 @@ swarm-lab-rs/
 │   │       ├── minority_game/    # 少数派博弈与从众羊群效应 (策略表、网络模仿与相变)
 │   │       ├── ant_foraging/     # 蚂蚁趋化觅食与路径自组织涌现 (PDE 连续介质趋化模型)
 │   │       ├── swarm_robotics/   # 极简认知群体机器人构型 (Moore 网格、拓扑连通、安全策略与自组织涌现)
-│   │       └── turing_morphogenesis/ # 图灵形态发生 (反应-扩散形态素、局域边缘识别、轮廓迁移与自愈再生)
+│   │       ├── turing_morphogenesis/ # 图灵形态发生 (反应-扩散形态素、局域边缘识别、轮廓迁移与自愈再生)
+│   │       └── heterogeneous_swarms/ # 异构演化群体与表型可塑性集体感知 (CMA-ES, 储备池 RNN 与在线调控)
 │   └── swarm-cli/                # 统一仿真命令行工具
 │       ├── Cargo.toml
-│       ├── examples/             # 各篇论文的专属独立复现与出图脚本 (01 ~ 16)
+│       ├── examples/             # 各篇论文的专属独立复现与出图脚本 (01 ~ 17)
 │       └── src/
 │           └── main.rs           # 命令行参数解析、进度条与 CSV 轨迹流式输出
 ├── papers/                       # 论文学习笔记与复现档案 (按拓扑分类)
