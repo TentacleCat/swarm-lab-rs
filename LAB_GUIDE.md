@@ -34,10 +34,13 @@ crates/swarm-core/src/
 │   ├── grid.rs       # 二维空间离散网格、五点中心拉普拉斯与守恒型一阶迎风对流
 │   ├── metrics.rs    # 觅食效率、食物消耗率与信息素统计
 │   └── model.rs      # 四组分反应-扩散-对流连续介质动力学系统
-└── swarm_robotics/   # 🎯 [实战关卡 10] 2019 Springer 极简群体机器人可证明自组织构型
-    ├── state.rs      # Moore 邻域 8 方向、256 局部状态位域与单纯形分类 (Simplicial Vertex)
-    ├── policy.rs     # 离线全策略综合、碰撞与拓扑连通保持、方向与频次启发式矩阵
-    └── simulator.rs  # 异步离散格点世界、多智能体非阻塞步进与目标构型自组织收敛
+├── swarm_robotics/   # 🎯 [实战关卡 10] 2019 Springer 极简群体机器人可证明自组织构型
+│   ├── state.rs      # Moore 邻域 8 方向、256 局部状态位域与单纯形分类 (Simplicial Vertex)
+│   ├── policy.rs     # 离线全策略综合、碰撞与拓扑连通保持、方向与频次启发式矩阵
+│   └── simulator.rs  # 异步离散格点世界、多智能体非阻塞步进与目标构型自组织收敛
+└── morphological_swarms/ # 🎯 [实战关卡 11] 2026 arXiv 形态计算与自对齐聚集 (Sweet Spot & MIPS)
+    ├── model.rs      # 周期性边界、WCA 软排斥碰撞、速度弛豫与形态自对齐力矩更新
+    └── metrics.rs    # 光照成核聚集率 N_circ / N 与宏观极化对齐度 <Psi>
 ```
 
 ---
@@ -253,6 +256,36 @@ crates/swarm-core/src/
   uv run python python/plot_swarm_pattern_formation.py
   ```
   *(生成 `output/swarm_pattern_formation_grid.png` 与 `output/swarm_pattern_formation_histograms.png`)*
+
+---
+
+### 🎯 关卡 11: 形态计算与自对齐聚集 (Morphological Computing & MIPS Phototaxis)
+- **代码文件**:
+  - 物理模型与周期性边界: [`crates/swarm-core/src/morphological_swarms/model.rs`](crates/swarm-core/src/morphological_swarms/model.rs)
+  - 宏观序参量与团簇网络: [`crates/swarm-core/src/morphological_swarms/metrics.rs`](crates/swarm-core/src/morphological_swarms/metrics.rs)
+- **学习的核心物理与形态学计算机制**:
+  1. **形态计算（Morphological Computation）与非对称受力**:
+     - 机器人机身外骨骼的非对称摩擦与质量分布，在遭遇物理接触力时产生自发偏转力矩；
+     - 仅依靠 1:15 间歇启闭（PWM 占空比降低速度至 $v_\circ / v_\bullet = 1/3$），**单机器人无法独立停在光照区**，完全依赖形态力矩诱发群体动力学聚集。
+  2. **向量三重积力矩与转向微分动力学**:
+     - 动力学控制方程：$\tau_n \dot{\vec{n}} = \epsilon (\vec{n} \times \vec{v}) \times \vec{n} + \sqrt{2D} \xi \vec{n}_{\perp}$；
+     - 2D 向量化实现：$\dot{n}_x \propto \kappa (n_y^2 v_x - n_x n_y v_y)$，$\dot{n}_y \propto \kappa (n_x^2 v_y - n_x n_y v_x)$；
+     - Aligner ($\kappa > 0$) 碰撞同向对齐 $\to$ 极化游弋流（Flocking，$\langle \Psi \rangle > 0.8$）；
+     - Fronter ($\kappa < 0$) 碰撞反向咬合 $\to$ 瞬时速度衰减至零。
+  3. **形态“甜点区 (Sweet Spot)”与相变相图**:
+     - 弱逆对齐 ($\kappa > -0.6$)：成核不足以抗衡噪声，聚集率接近随机游走基线 0.18；
+     - 强逆对齐 ($\kappa < -2.2$)：在全场（包括暗区）发生碰撞冷冻死锁，导致反向趋光；
+     - 最佳甜点区 ($\kappa \in [-2.0, -0.6]$)：碰撞减速与光照区慢行形成正反馈，通过动力学诱导相分离（MIPS）在光照区涌现出高达 40% 的自发聚集。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- morphological_swarms
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 16_arxiv2026_morphological_aggregating_swarms
+  uv run python python/plot_morphological_aggregating_swarms.py
+  ```
+  *(生成 `output/morphological_swarms_phase_diagram.png` 与 `output/morphological_swarms_spatial_snapshots.png`)*
 
 ---
 
