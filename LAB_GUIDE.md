@@ -136,6 +136,25 @@ crates/swarm-core/src/
 
 ---
 
+### 🎯 关卡 7: 大模型多智能体命名博弈与微观动力学（2026 LLM Naming Game）
+- **论文**: *"Microscopic dynamics of consensus formation in multi-agent LLM Naming Games"*, [arXiv:2608.02178](https://arxiv.org/abs/2608.02178) (2026)
+- **本地文档**: [`papers/naming-game/02-llm-naming-game-arxiv2026/README.md`](papers/naming-game/02-llm-naming-game-arxiv2026/README.md)
+- **代码文件**: [`crates/swarm-core/src/naming_game/llm_model.rs`](crates/swarm-core/src/naming_game/llm_model.rs)
+- **学习的核心物理与统计机制**:
+  1. **微观四通道解耦**: 将 LLM 听者回答解耦为库内通道固化率 $\pi(T) \equiv P(\text{YES} \mid w \in P_j)$ 与库外通道重涂率 $\phi(T) \equiv P(\text{YES} \mid w \notin P_j)$；
+  2. **微观漂移与平均场临界线**: 验证两词平均场临界有序相条件 $3\pi - 2\phi - 1 > 0$；
+  3. **三大模型架构的温度特征**:
+     - LLaMA-3.1:8B: 宽容型，重涂噪声主导，$t_c \sim e^{0.67 T}$；
+     - Mistral:7B: 近确定型，温度盲性（$\alpha \approx 0$）；
+     - Phi-3:14B: 保守型，漏坍缩主导，呈现显著的“逆温度序”（低温词库暴涨至 30+ 形成瓶颈）。
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 12_arxiv2026_llm_naming_game
+  ```
+  *(运行完毕自动生成 `output/llm_naming_game_trajectories.png` 与 `output/llm_naming_game_phase_diagram.png`)*
+
+---
+
 ## 💡 卡壳求助指南（如何使用参考答案）
 
 如果你在编写过程中：

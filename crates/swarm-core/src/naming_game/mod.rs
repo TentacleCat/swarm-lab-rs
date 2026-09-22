@@ -11,10 +11,12 @@
 //!
 //! 遇到卡壳可查阅参考答案: `crates/swarm-core/src/reference/naming_game.rs`
 
+pub mod llm_model;
 pub mod metrics;
 pub mod model;
 pub mod network;
 
+pub use llm_model::{ChannelOutcome, LlmArchitecture, LlmInteractionResult, LlmNamingGame};
 pub use metrics::{distinct_words, inventory_size_distribution, is_consensus, total_words};
 pub use model::{AgentId, InteractionResult, NamingGame, WordId};
 pub use network::{AdjacencyGraph, CompleteGraph, Network};
@@ -126,4 +128,45 @@ mod tests {
         }
         assert!(converged, "8 个智能体的完全图在 20,000 步内必能达成全网共识");
     }
+
+    #[test]
+    fn test_llm_naming_game_channels_and_ordering() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let graph = CompleteGraph::new(4);
+
+        // 1. 验证临界有序指标 R = 3*pi - 2*phi - 1
+        let game_ordered = LlmNamingGame::new(
+            graph.clone(),
+            LlmArchitecture::CustomTwoRate { pi: 0.9, phi: 0.1 },
+            0.5,
+        );
+        // R = 3*0.9 - 2*0.1 - 1 = 2.7 - 0.2 - 1 = 1.5 > 0
+        assert!((game_ordered.ordering_parameter_r() - 1.5).abs() < 1e-6);
+
+        let game_disordered = LlmNamingGame::new(
+            graph.clone(),
+            LlmArchitecture::CustomTwoRate { pi: 0.3, phi: 0.4 },
+            1.5,
+        );
+        // R = 3*0.3 - 2*0.4 - 1 = 0.9 - 0.8 - 1 = -0.9 < 0
+        assert!((game_disordered.ordering_parameter_r() - (-0.9)).abs() < 1e-6);
+
+        // 2. 测试确定性极限 (pi=1.0, phi=0.0) 下的小系统收敛
+        let mut game_det = LlmNamingGame::new(
+            graph,
+            LlmArchitecture::CustomTwoRate { pi: 1.0, phi: 0.0 },
+            0.0,
+        );
+        let mut converged = false;
+        for _ in 0..10_000 {
+            game_det.step(&mut rng);
+            if game_det.is_consensus() {
+                converged = true;
+                break;
+            }
+        }
+        assert!(converged, "确定性通道 (pi=1, phi=0) 必定快速收敛");
+        assert_eq!(game_det.distinct_words(), 1);
+    }
 }
+
