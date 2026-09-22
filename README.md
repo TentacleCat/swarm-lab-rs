@@ -108,9 +108,10 @@ swarm-lab-rs/
 │   ├── 2d-plane/                 # 2D 连续平面与环面体系
 │   ├── naming-game/              # 命名博弈复杂网络与大模型群体智能体系
 │   ├── minority-game/            # 少数派博弈、从众效应与金融物理体系
-│   ├── ant_foraging/             # 蚂蚁趋化觅食、信息素化学痕迹与路径自组织涌现
+│   ├── ant-foraging/             # 蚂蚁趋化觅食、信息素化学痕迹与路径自组织涌现
 │   ├── swarm-robotics/           # 极简群体机器人自组织构型与无死锁分布式控制
-│   └── turing-morphogenesis/     # 图灵反应-扩散形态发生与多智能体生物形态自组织
+│   ├── turing-morphogenesis/     # 图灵反应-扩散形态发生与多智能体生物形态自组织
+│   └── heterogeneous-swarms/     # 异构群体、演化神经回路与环境表型可塑性
 ├── python/                       # 科学作图与动画渲染脚本
 │   ├── requirements.txt
 │   ├── plot_phases.py            # 相位空间散点图与序参量时间演化曲线
@@ -120,7 +121,9 @@ swarm-lab-rs/
 │   ├── plot_minority_game.py     # 少数派博弈波动率相变与市场振荡曲线
 │   ├── plot_ant_chemotaxis.py    # 蚂蚁趋化四场空间分布与时空蚁道演化
 │   ├── plot_swarm_pattern_formation.py # 群体机器人构型演化网格切片与收敛统计直方图
-│   └── plot_turing_morphogenesis.py    # 图灵形态发生多阶段演化快照与动力学时序曲线
+│   ├── plot_turing_morphogenesis.py    # 图灵形态发生多阶段演化快照与动力学时序曲线
+│   ├── plot_heterogeneous_swarms.py    # 异构群体集体感知、表型分化与适应度热力图
+│   └── plot_morphological_aggregating_swarms.py # 形状被动自对齐、MIPS相分离与聚集相图
 ├── docs/                         # 理论专题文档
 │   └── swarmalator_primer.md     # Swarmalator 理论基础指南与数学推导
 ├── data/                         # 存放仿真轨迹 CSV / 数据缓存 (默认 git-ignore)
