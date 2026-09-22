@@ -1,4 +1,4 @@
-//! # Example 16: Morphological Swarms - Aggregating Swarms via Design Contingencies
+//! # Example 18: Morphological Swarms - Aggregating Swarms via Design Contingencies
 //!
 //! **论文**: *Aggregating swarms through morphology handling design contingencies: from the sweet spot to a rich expressivity*  
 //! **作者**: Jeremy Fersula, Nicolas Bredeche, Olivier Dauchot (*arXiv:2601.07610*, Jan 2026 / Sorbonne & ESPCI Paris)  

@@ -104,7 +104,7 @@ $$\vec{F}_{ij} = -\nabla V = \frac{48\epsilon_{\text{LJ}}}{r_{ij}^2} \left[ \lef
 
 ### 5.1 运行专属实验
 ```bash
-cargo run --release --example 16_arxiv2026_morphological_aggregating_swarms
+cargo run --release --example 18_arxiv2026_morphological_aggregating_swarms
 ```
 
 ### 5.2 绘制高分辨率科研图表
