@@ -30,10 +30,14 @@ crates/swarm-core/src/
 │   ├── strategy.rs   # 记忆位运算映射、策略表与虚拟打分机制
 │   ├── metrics.rs    # 归一化市场波动率 sigma^2 / N 与信息比率 alpha
 │   └── model.rs      # 网络局域模仿决策状态机
-└── ant_foraging/     # 🎯 [实战关卡 9] 2015 Ant Foraging 趋化偏微分方程与蚁道自组织涌现
-    ├── grid.rs       # 二维空间离散网格、五点中心拉普拉斯与守恒型一阶迎风对流
-    ├── metrics.rs    # 觅食效率、食物消耗率与信息素统计
-    └── model.rs      # 四组分反应-扩散-对流连续介质动力学系统
+├── ant_foraging/     # 🎯 [实战关卡 9] 2015 Ant Foraging 趋化偏微分方程与蚁道自组织涌现
+│   ├── grid.rs       # 二维空间离散网格、五点中心拉普拉斯与守恒型一阶迎风对流
+│   ├── metrics.rs    # 觅食效率、食物消耗率与信息素统计
+│   └── model.rs      # 四组分反应-扩散-对流连续介质动力学系统
+└── swarm_robotics/   # 🎯 [实战关卡 10] 2019 Springer 极简群体机器人可证明自组织构型
+    ├── state.rs      # Moore 邻域 8 方向、256 局部状态位域与单纯形分类 (Simplicial Vertex)
+    ├── policy.rs     # 离线全策略综合、碰撞与拓扑连通保持、方向与频次启发式矩阵
+    └── simulator.rs  # 异步离散格点世界、多智能体非阻塞步进与目标构型自组织收敛
 ```
 
 ---
@@ -220,6 +224,35 @@ crates/swarm-core/src/
   uv run python python/plot_ant_chemotaxis.py
   ```
   *(生成 `output/ant_chemotaxis_spatial_fields.png`、`output/ant_chemotaxis_trails_evolution.png` 与 `output/ant_chemotaxis_efficiency.png`)*
+
+### 🎯 关卡 10: 极简认知群体机器人可证明自组织构型 (Provable Swarm Pattern Formation)
+- **代码文件**:
+  - 局域观测与拓扑单纯形分类: [`crates/swarm-core/src/swarm_robotics/state.rs`](crates/swarm-core/src/swarm_robotics/state.rs)
+  - 离线全策略生成与启发式转移矩阵: [`crates/swarm-core/src/swarm_robotics/policy.rs`](crates/swarm-core/src/swarm_robotics/policy.rs)
+  - 异步离散仿真与自组织收敛世界: [`crates/swarm-core/src/swarm_robotics/simulator.rs`](crates/swarm-core/src/swarm_robotics/simulator.rs)
+- **学习的核心物理与机器人分布式控制机制**:
+  1. **极简感知与动作模型 (Minimalist Sensor/Actuator Model)**:
+     - 机器人处于 2D Moore 网格环境，仅感知 8 邻域是否有机器人，状态空间有限且封闭（$s \in \{0, 1\}^8$，共 256 种局部状态）；
+     - 动作全向可选（$a \in \{1..8\}$，共 8 个平移方向）；无记忆、无全局坐标系、无通信握手。
+  2. **可证明安全无死锁策略 ($\Pi_{\text{safe}}$)**:
+     - 碰撞规避策略（Collision Avoidance）：禁止移向已有机器人的格子；
+     - 局部拓扑连通保持（Local Separation Avoidance）：引入单纯形节点分类（Simplicial Vertex），仅当局部邻域诱导子图连通时才允许移动，严格保证整个群体网络在移动中保持全局连通图。
+  3. **目标构型期望状态与对称性分解 ($S_{\text{des}}$ & $\Pi_f$)**:
+     - 从几何构型模板（如 Triangle-4, Square-4, Hexagon-6 等）中提取所有构成此构型的局部状态集合 $S_{\text{des}}$；
+     - 定义构型收敛准则：当且仅当所有机器人均满足 $s_i \in S_{\text{des}}$ 时，群体达到吸收态终止移动。
+  4. **启发式收敛加速策略 (ALT1 / ALT2)**:
+     - 匹配方向矩阵 $D(S_{\text{des}})$ 与匹配频次计数 $M(S_{\text{des}})$；
+     - 引导机器人优先选择能更快形成期望邻域结构的动作，显著减少随机抖动与收敛步数。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- swarm_robotics
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 15_springer2019_swarm_robotics_pattern_formation
+  uv run python python/plot_swarm_pattern_formation.py
+  ```
+  *(生成 `output/swarm_pattern_formation_grid.png` 与 `output/swarm_pattern_formation_histograms.png`)*
 
 ---
 
