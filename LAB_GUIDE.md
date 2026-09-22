@@ -26,10 +26,14 @@ crates/swarm-core/src/
 │   ├── model.rs      # Direct Naming Game 谈判更新规则
 │   ├── llm_model.rs  # LLM 四通道随机转移模型
 │   └── network.rs    # 完全图、ER 随机图、BA 无标度、WS 小世界网络拓扑
-└── minority_game/    # 🎯 [实战关卡 8] 2005 Minority Game 少数派博弈与从众羊群效应
-    ├── strategy.rs   # 记忆位运算映射、策略表与虚拟打分机制
-    ├── metrics.rs    # 归一化市场波动率 sigma^2 / N 与信息比率 alpha
-    └── model.rs      # 网络局域模仿决策状态机
+├── minority_game/    # 🎯 [实战关卡 8] 2005 Minority Game 少数派博弈与从众羊群效应
+│   ├── strategy.rs   # 记忆位运算映射、策略表与虚拟打分机制
+│   ├── metrics.rs    # 归一化市场波动率 sigma^2 / N 与信息比率 alpha
+│   └── model.rs      # 网络局域模仿决策状态机
+└── ant_foraging/     # 🎯 [实战关卡 9] 2015 Ant Foraging 趋化偏微分方程与蚁道自组织涌现
+    ├── grid.rs       # 二维空间离散网格、五点中心拉普拉斯与守恒型一阶迎风对流
+    ├── metrics.rs    # 觅食效率、食物消耗率与信息素统计
+    └── model.rs      # 四组分反应-扩散-对流连续介质动力学系统
 ```
 
 ---
@@ -182,6 +186,40 @@ crates/swarm-core/src/
   uv run python python/plot_minority_game.py
   ```
   *(生成 `output/minority_game_volatility.png` 与 `output/minority_game_timeseries.png`)*
+
+---
+
+### 🎯 关卡 9: 偏微分方程连续介质趋化与自组织蚁道涌现（2015 Ant Foraging via Chemotaxis）
+- **论文**: *"Modeling ant foraging: a chemotaxis approach with pheromones and trail formation"*, Paulo Amorim, [arXiv:1409.3808](https://arxiv.org/abs/1409.3808) (*J. Theor. Biol.* 2015)
+- **本地文档**: [`papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/README.md`](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/README.md)
+- **代码文件**:
+  - 空间网格与偏微分算子: [`crates/swarm-core/src/ant_foraging/grid.rs`](crates/swarm-core/src/ant_foraging/grid.rs)
+  - 四场耦合动力学状态机: [`crates/swarm-core/src/ant_foraging/model.rs`](crates/swarm-core/src/ant_foraging/model.rs)
+  - 统计指标与质量守恒: [`crates/swarm-core/src/ant_foraging/metrics.rs`](crates/swarm-core/src/ant_foraging/metrics.rs)
+- **学习的核心物理与数值计算机制**:
+  1. **连续介质 PDE 建模**:
+     - 觅食蚁场 $u$（扩散 + 沿 $\nabla v$ 趋化平流 + 接触食物转化为 $w$）；
+     - 搬运蚁场 $w$（向巢穴定向迁移 $\nabla a$ + 回巢在 $N(x)$ 处卸货并重新转化为 $u$）；
+     - 信息素场 $v$（扩散 + 自然挥发 $-\varepsilon v$ + 铺路源项 $P(x) w$ 近巢穴抑制）；
+     - 食物源场 $c$（质量作用定律单调消耗 $\partial_t c = -uc$）。
+  2. **数值迎风格式（Conservative Upwind Scheme）**:
+     - 在网格控制界面采用基于流向的通量选取，避免高 Peclet 数平流数值发散；
+     - 保证质量严格守恒与解的物理非负性（$\iint (u+w) dx dy = \text{const}$）。
+  3. **自催化正反馈与路径涌现**:
+     - 初始随机扩散 $\to$ 发现食物 $\to$ 铺设信息素 $\to$ 招募更多觅食蚁 $\to$ 自发形成高速蚁道；
+     - 食物耗尽后信息素自然衰减，蚁道自发解体。
+  4. **参数空间与搬运效率**:
+     - 验证论文核心结论：自组织蚁道的形成显著加速了食物的运载效率。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- ant_foraging
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 14_arxiv1409_ant_chemotaxis_foraging
+  uv run python python/plot_ant_chemotaxis.py
+  ```
+  *(生成 `output/ant_chemotaxis_spatial_fields.png`、`output/ant_chemotaxis_trails_evolution.png` 与 `output/ant_chemotaxis_efficiency.png`)*
 
 ---
 

@@ -59,6 +59,7 @@
 | 13 | [Microscopic activity patterns in the Naming Game](https://arxiv.org/abs/cond-mat/0606125) | *J. Phys. A* 2006 | 📄 [打开 PDF](papers/naming-game/01-microscopic-activity-condmat2006/paper.pdf) | [`papers/naming-game/01-microscopic-activity`](papers/naming-game/01-microscopic-activity-condmat2006/) | ⚡ [`11_condmat2006_naming_game_activity.rs`](crates/swarm-cli/examples/11_condmat2006_naming_game_activity.rs) |
 | 14 | [Consensus formation in multi-agent LLM Naming Games](https://arxiv.org/abs/2608.02178) | *arXiv* 2026 | 📄 [打开 PDF](papers/naming-game/02-llm-naming-game-arxiv2026/paper.pdf) | [`papers/naming-game/02-llm-naming-game`](papers/naming-game/02-llm-naming-game-arxiv2026/) | ⚡ [`12_arxiv2026_llm_naming_game.rs`](crates/swarm-cli/examples/12_arxiv2026_llm_naming_game.rs) |
 | 15 | [Minority game with local interactions due to the presence of herding behavior](https://arxiv.org/abs/physics/0512087) | *arXiv* 2005 / *Physica A* | 📄 [打开 PDF](papers/minority-game/01-herding-behavior-physics0512087/paper.pdf) | [`papers/minority-game/01-herding-behavior`](papers/minority-game/01-herding-behavior-physics0512087/) | ⚡ [`13_physics0512087_minority_game_herding.rs`](crates/swarm-cli/examples/13_physics0512087_minority_game_herding.rs) |
+| 16 | [Modeling ant foraging: a chemotaxis approach with pheromones and trail formation](https://arxiv.org/abs/1409.3808) | *J. Theor. Biol.* 2015 | 📄 [打开 PDF](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/paper.pdf) | [`papers/ant-foraging/01-chemotaxis-trail-formation`](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/) | ⚡ [`14_arxiv1409_ant_chemotaxis_foraging.rs`](crates/swarm-cli/examples/14_arxiv1409_ant_chemotaxis_foraging.rs) |
 
 
 ---
@@ -84,10 +85,11 @@ swarm-lab-rs/
 │   │       │   ├── nature2017_2d.rs  # 2017 Nature Comms 2D 模型 (Rayon 并行加速)
 │   │       │   └── ring_1d.rs        # 1D 圆环模型 (Rayon 并行加速)
 │   │       ├── naming_game/      # 命名博弈与微观动力学 (Direct & LLM 模型)
-│   │       └── minority_game/    # 少数派博弈与从众羊群效应 (策略表、网络模仿与相变)
+│   │       ├── minority_game/    # 少数派博弈与从众羊群效应 (策略表、网络模仿与相变)
+│   │       └── ant_foraging/     # 蚂蚁趋化觅食与路径自组织涌现 (PDE 连续介质趋化模型)
 │   └── swarm-cli/                # 统一仿真命令行工具
 │       ├── Cargo.toml
-│       ├── examples/             # 各篇论文的专属独立复现与出图脚本 (01 ~ 13)
+│       ├── examples/             # 各篇论文的专属独立复现与出图脚本 (01 ~ 14)
 │       └── src/
 │           └── main.rs           # 命令行参数解析、进度条与 CSV 轨迹流式输出
 ├── papers/                       # 论文学习笔记与复现档案 (按拓扑分类)
@@ -96,14 +98,16 @@ swarm-lab-rs/
 │   ├── 1d-line/                  # 1D 线段体系
 │   ├── 2d-plane/                 # 2D 连续平面与环面体系
 │   ├── naming-game/              # 命名博弈复杂网络与大模型群体智能体系
-│   └── minority-game/            # 少数派博弈、从众效应与金融物理体系
+│   ├── minority-game/            # 少数派博弈、从众效应与金融物理体系
+│   └── ant-foraging/             # 蚂蚁趋化觅食、信息素化学痕迹与路径自组织涌现
 ├── python/                       # 科学作图与动画渲染脚本
 │   ├── requirements.txt
 │   ├── plot_phases.py            # 相位空间散点图与序参量时间演化曲线
 │   ├── animate.py                # 生成粒子动态演化 GIF / MP4
 │   ├── plot_naming_game.py       # 命名博弈宏观与微观度分布绘制
 │   ├── plot_llm_naming_game.py   # LLM 命名博弈多通道相图
-│   └── plot_minority_game.py     # 少数派博弈波动率相变与市场振荡曲线
+│   ├── plot_minority_game.py     # 少数派博弈波动率相变与市场振荡曲线
+│   └── plot_ant_chemotaxis.py    # 蚂蚁趋化四场空间分布与时空蚁道演化
 ├── docs/                         # 理论专题文档
 │   └── swarmalator_primer.md     # Swarmalator 理论基础指南与数学推导
 ├── data/                         # 存放仿真轨迹 CSV / 数据缓存 (默认 git-ignore)
