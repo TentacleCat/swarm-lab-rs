@@ -15,6 +15,7 @@ pub mod swarm_robotics;
 pub mod turing_morphogenesis;
 pub mod heterogeneous_swarms;
 pub mod morphological_swarms;
+pub mod sons_hierarchy;
 pub mod reference;
 pub mod types;
 

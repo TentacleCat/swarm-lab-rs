@@ -52,9 +52,15 @@ crates/swarm-core/src/
 │   ├── metrics.rs        # 累积光强适应度 f 与群体运动对齐序参量 \Phi
 │   ├── cma_es.rs         # 协方差矩阵自适应进化策略 (CMA-ES) 优化器
 │   └── simulator.rs      # 10Hz 多智能体高精度仿真引擎与评测流水线
-└── morphological_swarms/ # 🎯 [实战关卡 13] 2026 arXiv 形态计算与自对齐聚集 (Sweet Spot & MIPS)
-    ├── model.rs      # 周期性边界、WCA 软排斥碰撞、速度弛豫与形态自对齐力矩更新
-    └── metrics.rs    # 光照成核聚集率 N_circ / N 与宏观极化对齐度 <Psi>
+├── morphological_swarms/ # 🎯 [实战关卡 13] 2026 arXiv 形态计算与自对齐聚集 (Sweet Spot & MIPS)
+│   ├── model.rs      # 周期性边界、WCA 软排斥碰撞、速度弛豫与形态自对齐力矩更新
+│   └── metrics.rs    # 光照成核聚集率 N_circ / N 与宏观极化对齐度 <Psi>
+└── sons_hierarchy/       # 🎯 [实战关卡 14] 2024 Science Robotics 自组织神经系统 (SoNS) 动态多层级控制
+    ├── types.rs          # 异构空中-地面机器人、目标形态槽位与相对几何位姿
+    ├── allocator.rs      # Section 4.1 节点分配与自组织就近替换 (Dynamic Replacement)
+    ├── controller.rs     # Section 4.1 质量-弹簧-阻尼运动学、减速死区与安全区视距保底
+    ├── tree.rs           # Section 4.1 树状网络递归划分、断链自立 Brain 与规模破偶合并
+    └── metrics.rs        # Section 4.2 公式 (1) 构型跟踪误差 E(t) 与公式 (2) 理论收敛下界 B(t)
 ```
 
 ---
@@ -365,6 +371,41 @@ crates/swarm-core/src/
   uv run python python/plot_morphological_aggregating_swarms.py
   ```
   *(生成 `output/morphological_swarms_phase_diagram.png` 与 `output/morphological_swarms_spatial_snapshots.png`)*
+
+---
+
+### 🎯 关卡 14: 自组织神经系统 (SoNS) 动态多层级控制与就近置换
+- **代码文件**:
+  - 核心类型定义: [`crates/swarm-core/src/sons_hierarchy/types.rs`](crates/swarm-core/src/sons_hierarchy/types.rs)
+  - 节点分配与就近置换 (Section 4.1): [`crates/swarm-core/src/sons_hierarchy/allocator.rs`](crates/swarm-core/src/sons_hierarchy/allocator.rs)
+  - 质量-弹簧-阻尼运动学控制: [`crates/swarm-core/src/sons_hierarchy/controller.rs`](crates/swarm-core/src/sons_hierarchy/controller.rs)
+  - 拓扑生命周期与子树维护: [`crates/swarm-core/src/sons_hierarchy/tree.rs`](crates/swarm-core/src/sons_hierarchy/tree.rs)
+  - 跟踪误差与理论下界 (Section 4.2): [`crates/swarm-core/src/sons_hierarchy/metrics.rs`](crates/swarm-core/src/sons_hierarchy/metrics.rs)
+- **学习的核心理论与算法机制 (Science Robotics 2024 / arXiv:2401.13103)**:
+  1. **零先验树状网络自组织建立与递归委派 (Section 4.1)**:
+     - 每台机器人初始均为自身 SoNS 的独立 Brain；
+     - 招募链接建立后，Parent 将子图 $G'_i \subset G$ 递归分发给 Child，实现自顶向下的分层管辖。
+  2. **自组织节点匹配与就近置换机制 (Dynamic Replacement)**:
+     - 传统层级网络遭遇外围新节点时需逐跳向下交接（Link-by-link handover），引发严重的级联延迟；
+     - SoNS 允许 Parent 对已分配槽位执行**就近替换**：将更靠近目标槽位的新 Candidate 填入，将原 Child 降级为候选者参与下一轮重分配，群体内部产生涟漪顺移，大幅加速几何构型收敛。
+  3. **集群裂变与规模破偶合并 (Splitting & Merging)**:
+     - 遭遇障碍或断链时，被割离节点自立为新 Brain，并**完整保留其下游子树结构**；
+     - 两群相遇时，以总子树规模 $\text{scale}$ 与内部 Rank 评估主从，劣势方整树并入优势方。
+  4. **质量-弹簧-阻尼运动控制与安全区保底**:
+     - 死区停止 $r_{\text{stop}}$、线性减速 $r_{\text{slow}}$、视距安全区 $r_{\text{safe}}$ 约束与势场避障叠加。
+  5. **构型收敛评估指标 (Section 4.2)**:
+     - 公式 (1) 平均欧氏跟踪误差 $E(t) = \frac{1}{n} \sum |d(\mathbf{p}_i - \mathbf{p}_1) - d(\mathbf{f}_i - \mathbf{f}_1)|$；
+     - 公式 (2) 物理极限直线速度理论下界 $B(t) = \frac{1}{n} \sum \max(0, d_0 - \kappa_i t)$。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- sons_hierarchy
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --example 19_arxiv2401_sons_self_organizing_hierarchy
+  uv run python python/plot_sons_self_organizing_hierarchy.py
+  ```
+  *(生成 `output/sons_self_organizing_hierarchy.png`，呈现三阶段空间拓扑演化、跟踪误差收敛曲线与集群合并演化)*
 
 ---
 

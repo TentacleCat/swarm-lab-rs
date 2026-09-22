@@ -123,7 +123,11 @@ swarm-lab-rs/
 │   ├── plot_swarm_pattern_formation.py # 群体机器人构型演化网格切片与收敛统计直方图
 │   ├── plot_turing_morphogenesis.py    # 图灵形态发生多阶段演化快照与动力学时序曲线
 │   ├── plot_heterogeneous_swarms.py    # 异构群体集体感知、表型分化与适应度热力图
-│   └── plot_morphological_aggregating_swarms.py # 形状被动自对齐、MIPS相分离与聚集相图
+│   ├── plot_morphological_aggregating_swarms.py # 形状被动自对齐、MIPS相分离与聚集相图
+│   └── plot_sons_self_organizing_hierarchy.py # 自组织神经系统 (SoNS) 多层级动态控制与收敛下界
+├── submodules/                   # 上游官方算法源码 Git Submodules
+│   ├── AggregatingSwarms2026     # arXiv:2601 形状自对齐与聚集源码
+│   └── SoNS2.0-SR                # Science Robotics 2024 / Zenodo 10038653 SoNS 源码
 ├── docs/                         # 理论专题文档
 │   └── swarmalator_primer.md     # Swarmalator 理论基础指南与数学推导
 ├── data/                         # 存放仿真轨迹 CSV / 数据缓存 (默认 git-ignore)

@@ -1,3 +1,6 @@
 [submodule "submodules/AggregatingSwarms2026"]
 	path = submodules/AggregatingSwarms2026
 	url = https://github.com/jeremyaqp/AggregatingSwarms2026
+[submodule "submodules/SoNS2.0-SR"]
+	path = submodules/SoNS2.0-SR
+	url = https://github.com/freedomcondor/SoNS2.0-SR.git
