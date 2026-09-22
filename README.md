@@ -58,6 +58,7 @@
 | 12 | [Swarmalators with delayed interactions](https://arxiv.org/abs/2210.11417) | *arXiv* 2022 | 📄 [打开 PDF](papers/delayed-interactions/paper.pdf) | [`papers/delayed-interactions`](papers/delayed-interactions/) | ⚡ 参考时滞扩展 |
 | 13 | [Microscopic activity patterns in the Naming Game](https://arxiv.org/abs/cond-mat/0606125) | *J. Phys. A* 2006 | 📄 [打开 PDF](papers/naming-game/01-microscopic-activity-condmat2006/paper.pdf) | [`papers/naming-game/01-microscopic-activity`](papers/naming-game/01-microscopic-activity-condmat2006/) | ⚡ [`11_condmat2006_naming_game_activity.rs`](crates/swarm-cli/examples/11_condmat2006_naming_game_activity.rs) |
 | 14 | [Consensus formation in multi-agent LLM Naming Games](https://arxiv.org/abs/2608.02178) | *arXiv* 2026 | 📄 [打开 PDF](papers/naming-game/02-llm-naming-game-arxiv2026/paper.pdf) | [`papers/naming-game/02-llm-naming-game`](papers/naming-game/02-llm-naming-game-arxiv2026/) | ⚡ [`12_arxiv2026_llm_naming_game.rs`](crates/swarm-cli/examples/12_arxiv2026_llm_naming_game.rs) |
+| 15 | [Minority game with local interactions due to the presence of herding behavior](https://arxiv.org/abs/physics/0512087) | *arXiv* 2005 / *Physica A* | 📄 [打开 PDF](papers/minority-game/01-herding-behavior-physics0512087/paper.pdf) | [`papers/minority-game/01-herding-behavior`](papers/minority-game/01-herding-behavior-physics0512087/) | ⚡ [`13_physics0512087_minority_game_herding.rs`](crates/swarm-cli/examples/13_physics0512087_minority_game_herding.rs) |
 
 
 ---
@@ -79,22 +80,30 @@ swarm-lab-rs/
 │   │       ├── types.rs          # 动力系统 Trait、状态快照
 │   │       ├── integrator.rs     # 高性能无内存分配 RK4 积分器
 │   │       ├── metrics.rs        # Kuramoto R, 空间序 S, 时空关联 S_±, 回转半径
-│   │       └── models/           # 各论文动力学微分方程实现
-│   │           ├── nature2017_2d.rs  # 2017 Nature Comms 2D 模型 (Rayon 并行加速)
-│   │           └── ring_1d.rs        # 1D 圆环模型 (Rayon 并行加速)
+│   │       ├── models/           # 各论文动力学微分方程实现
+│   │       │   ├── nature2017_2d.rs  # 2017 Nature Comms 2D 模型 (Rayon 并行加速)
+│   │       │   └── ring_1d.rs        # 1D 圆环模型 (Rayon 并行加速)
+│   │       ├── naming_game/      # 命名博弈与微观动力学 (Direct & LLM 模型)
+│   │       └── minority_game/    # 少数派博弈与从众羊群效应 (策略表、网络模仿与相变)
 │   └── swarm-cli/                # 统一仿真命令行工具
 │       ├── Cargo.toml
+│       ├── examples/             # 各篇论文的专属独立复现与出图脚本 (01 ~ 13)
 │       └── src/
 │           └── main.rs           # 命令行参数解析、进度条与 CSV 轨迹流式输出
 ├── papers/                       # 论文学习笔记与复现档案 (按拓扑分类)
 │   ├── 00-template/              # 论文复现标准模板 (公式、相图、复现自查表)
 │   ├── 1d-ring/                  # 1D 圆环体系
 │   ├── 1d-line/                  # 1D 线段体系
-│   └── 2d-plane/                 # 2D 连续平面与环面体系
+│   ├── 2d-plane/                 # 2D 连续平面与环面体系
+│   ├── naming-game/              # 命名博弈复杂网络与大模型群体智能体系
+│   └── minority-game/            # 少数派博弈、从众效应与金融物理体系
 ├── python/                       # 科学作图与动画渲染脚本
 │   ├── requirements.txt
 │   ├── plot_phases.py            # 相位空间散点图与序参量时间演化曲线
-│   └── animate.py                # 生成粒子动态演化 GIF / MP4
+│   ├── animate.py                # 生成粒子动态演化 GIF / MP4
+│   ├── plot_naming_game.py       # 命名博弈宏观与微观度分布绘制
+│   ├── plot_llm_naming_game.py   # LLM 命名博弈多通道相图
+│   └── plot_minority_game.py     # 少数派博弈波动率相变与市场振荡曲线
 ├── docs/                         # 理论专题文档
 │   └── swarmalator_primer.md     # Swarmalator 理论基础指南与数学推导
 ├── data/                         # 存放仿真轨迹 CSV / 数据缓存 (默认 git-ignore)

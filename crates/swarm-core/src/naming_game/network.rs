@@ -190,4 +190,62 @@ impl AdjacencyGraph {
 
         graph
     }
+
+    /// 构造一维规则环形网络 (Regular Ring Lattice)
+    /// - 每个节点连向左右各 k/2 个邻居（总度数为 k，k 为偶数）
+    pub fn regular_ring(n: usize, k: usize) -> Self {
+        assert!(n > k && k >= 2 && k % 2 == 0, "n > k 且 k 必须为正偶数");
+        let mut graph = Self {
+            n,
+            adj_lists: vec![Vec::new(); n],
+        };
+        let half_k = k / 2;
+        for i in 0..n {
+            for d in 1..=half_k {
+                let j = (i + d) % n;
+                graph.add_edge(i, j);
+            }
+        }
+        graph
+    }
+
+    /// 构造小世界网络 (Watts-Strogatz Small-World Model)
+    /// - `k`: 初始规则环邻居数（偶数）
+    /// - `p`: 边重连概率 p in [0, 1]
+    pub fn watts_strogatz<R: Rng>(n: usize, k: usize, p: f64, rng: &mut R) -> Self {
+        assert!(n > k && k >= 2 && k % 2 == 0);
+        let mut graph = Self::regular_ring(n, k);
+        if p <= 0.0 {
+            return graph;
+        }
+
+        let half_k = k / 2;
+        for i in 0..n {
+            for d in 1..=half_k {
+                let original_target = (i + d) % n;
+                if rng.gen_bool(p.clamp(0.0, 1.0)) {
+                    // 尝试重连到随机目标节点
+                    let mut attempts = 0;
+                    while attempts < 20 {
+                        let cand = rng.gen_range(0..n);
+                        if cand != i && !graph.adj_lists[i].contains(&cand) {
+                            // 移除原边
+                            if let Some(pos) = graph.adj_lists[i].iter().position(|&x| x == original_target) {
+                                graph.adj_lists[i].swap_remove(pos);
+                            }
+                            if let Some(pos) = graph.adj_lists[original_target].iter().position(|&x| x == i) {
+                                graph.adj_lists[original_target].swap_remove(pos);
+                            }
+                            // 添加新边
+                            graph.add_edge(i, cand);
+                            break;
+                        }
+                        attempts += 1;
+                    }
+                }
+            }
+        }
+        graph
+    }
 }
+

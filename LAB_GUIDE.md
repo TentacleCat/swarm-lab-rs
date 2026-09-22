@@ -21,10 +21,15 @@ crates/swarm-core/src/
 ├── models/
 │   ├── nature2017_2d.rs  # 🎯 [实战关卡 3] 2017 Nature Comms 2D 经典模型
 │   └── ring_1d.rs        # 🎯 [实战关卡 4] 2018 PRE 一维圆环模型
-└── naming_game/      # 🎯 [实战关卡 6] 2006 Naming Game 命名博弈与微观动力学 (离散复杂网络)
-    ├── metrics.rs    # 宏观 Nw, Nd 与微观度分布 P_n(k)
-    ├── model.rs      # Direct Naming Game 谈判更新规则
-    └── network.rs    # 完全图、ER 随机图、BA 无标度网络拓扑
+├── naming_game/      # 🎯 [实战关卡 6 & 7] 命名博弈与大模型多智能体 (微观统计与四通道解耦)
+│   ├── metrics.rs    # 宏观 Nw, Nd 与微观度分布 P_n(k)
+│   ├── model.rs      # Direct Naming Game 谈判更新规则
+│   ├── llm_model.rs  # LLM 四通道随机转移模型
+│   └── network.rs    # 完全图、ER 随机图、BA 无标度、WS 小世界网络拓扑
+└── minority_game/    # 🎯 [实战关卡 8] 2005 Minority Game 少数派博弈与从众羊群效应
+    ├── strategy.rs   # 记忆位运算映射、策略表与虚拟打分机制
+    ├── metrics.rs    # 归一化市场波动率 sigma^2 / N 与信息比率 alpha
+    └── model.rs      # 网络局域模仿决策状态机
 ```
 
 ---
@@ -152,6 +157,31 @@ crates/swarm-core/src/
   cargo run --release --example 12_arxiv2026_llm_naming_game
   ```
   *(运行完毕自动生成 `output/llm_naming_game_trajectories.png` 与 `output/llm_naming_game_phase_diagram.png`)*
+
+---
+
+### 🎯 关卡 8: 少数派博弈与从众羊群效应（2005 Minority Game with Herding Behavior）
+- **论文**: *"Minority game with local interactions due to the presence of herding behavior"*, A. L. M. Vilela, D. O. Cajueiro et al., [physics/0512087](https://arxiv.org/abs/physics/0512087)
+- **本地文档**: [`papers/minority-game/01-herding-behavior-physics0512087/README.md`](papers/minority-game/01-herding-behavior-physics0512087/README.md)
+- **代码文件**:
+  - 策略表与虚拟打分: [`crates/swarm-core/src/minority_game/strategy.rs`](crates/swarm-core/src/minority_game/strategy.rs)
+  - 波动率与相变统计: [`crates/swarm-core/src/minority_game/metrics.rs`](crates/swarm-core/src/minority_game/metrics.rs)
+  - 网络局域模仿状态机: [`crates/swarm-core/src/minority_game/model.rs`](crates/swarm-core/src/minority_game/model.rs)
+- **学习的核心物理与统计机制**:
+  1. **历史状态位掩码操作**: 将长度为 $M$ 的过去胜负二值序列打包为一个 `usize`（$0 \dots 2^M - 1$），实现 $O(1)$ 常数时间查表；
+  2. **虚拟打分（Virtual Scoring）**: 每个 Agent 拥有 $S$ 个独立策略表，每轮不论是否执行，均根据真实少数派胜者更新策略虚拟分数 $U_{i, s}(t+1) = U_{i, s}(t) - a_i^s(t) \cdot \text{sgn}(A(t))$；
+  3. **网络局域从众（Herding Imitation）**: 遍历 `network.neighbors(agent_id)`，寻找邻域得分最高者。若自身得分低于邻居最高分，则放弃自主策略，盲从模仿该邻居动作；
+  4. **相变破坏与市场振荡**: 验证经典 $\alpha_c \approx 0.34$ 最优协调相为何在强局部从众下被彻底抹平，波动率 $\sigma^2/N$ 暴涨数倍。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- minority_game
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 13_physics0512087_minority_game_herding
+  uv run python python/plot_minority_game.py
+  ```
+  *(生成 `output/minority_game_volatility.png` 与 `output/minority_game_timeseries.png`)*
 
 ---
 
