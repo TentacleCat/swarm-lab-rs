@@ -12,6 +12,7 @@ pub mod ant_foraging;
 pub mod minority_game;
 pub mod naming_game;
 pub mod swarm_robotics;
+pub mod heterogeneous_swarms;
 pub mod reference;
 pub mod types;
 
