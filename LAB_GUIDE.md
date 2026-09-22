@@ -34,10 +34,15 @@ crates/swarm-core/src/
 │   ├── grid.rs       # 二维空间离散网格、五点中心拉普拉斯与守恒型一阶迎风对流
 │   ├── metrics.rs    # 觅食效率、食物消耗率与信息素统计
 │   └── model.rs      # 四组分反应-扩散-对流连续介质动力学系统
-└── swarm_robotics/   # 🎯 [实战关卡 10] 2019 Springer 极简群体机器人可证明自组织构型
-    ├── state.rs      # Moore 邻域 8 方向、256 局部状态位域与单纯形分类 (Simplicial Vertex)
-    ├── policy.rs     # 离线全策略综合、碰撞与拓扑连通保持、方向与频次启发式矩阵
-    └── simulator.rs  # 异步离散格点世界、多智能体非阻塞步进与目标构型自组织收敛
+├── swarm_robotics/   # 🎯 [实战关卡 10] 2019 Springer 极简群体机器人可证明自组织构型
+│   ├── state.rs      # Moore 邻域 8 方向、256 局部状态位域与单纯形分类 (Simplicial Vertex)
+│   ├── policy.rs     # 离线全策略综合、碰撞与拓扑连通保持、方向与频次启发式矩阵
+│   └── simulator.rs  # 异步离散格点世界、多智能体非阻塞步进与目标构型自组织收敛
+└── turing_morphogenesis/ # 🎯 [实战关卡 11] 2018 Science Robotics 反应-扩散与群体形态发生
+    ├── morphogen.rs  # 激活子-抑制子分段线性动力学、通信图拉普拉斯与 LED 浓度映射
+    ├── edge_detector.rs # 局域加权邻居之比自适应外边缘探测器
+    ├── robot.rs      # Kilobot 三态行为状态机 (Wait / Orbit / Follow) 与斑点捕获
+    └── simulator.rs  # 多智能体连续空间世界、轮廓环绕物理运动学与截肢自愈再生
 ```
 
 ---
@@ -253,6 +258,35 @@ crates/swarm-core/src/
   uv run python python/plot_swarm_pattern_formation.py
   ```
   *(生成 `output/swarm_pattern_formation_grid.png` 与 `output/swarm_pattern_formation_histograms.png`)*
+
+### 🎯 关卡 11: 图灵反应-扩散形态素与群体形态发生 (Turing Morphogenesis in Robot Swarms)
+- **代码文件**:
+  - 形态素动力学与图拉普拉斯: [`crates/swarm-core/src/turing_morphogenesis/morphogen.rs`](crates/swarm-core/src/turing_morphogenesis/morphogen.rs)
+  - 局域加权边缘探测器: [`crates/swarm-core/src/turing_morphogenesis/edge_detector.rs`](crates/swarm-core/src/turing_morphogenesis/edge_detector.rs)
+  - Kilobot 行为状态机: [`crates/swarm-core/src/turing_morphogenesis/robot.rs`](crates/swarm-core/src/turing_morphogenesis/robot.rs)
+  - 连续世界多智能体仿真器: [`crates/swarm-core/src/turing_morphogenesis/simulator.rs`](crates/swarm-core/src/turing_morphogenesis/simulator.rs)
+- **学习的核心物理与群体生物形态发生机制**:
+  1. **动态网络上的图灵反应-扩散 (Turing Reaction-Diffusion on Dynamic Graphs)**:
+     - 激活子 $u$ 与抑制子 $v$ 沿近邻红外通信网络扩散；
+     - 满足长程抑制、短程激活图灵条件（$D_v / D_u = 20 \gg 1$），在初始均一网络上自发失稳形成空间周期性极化斑点（Polarized Turing Spots $u > 4.0$）；
+     - 针对嵌入式低功耗微处理器的分段线性饱和动力学（Piecewise-linear Kinetics）。
+  2. **完全去中心化的局域边缘识别 (Decentralized Boundary Detection)**:
+     - 机器人仅依据自身邻居数与邻居的距离加权邻居均值之比（$\bar{N}_i / \bar{N}_{\mathcal{N}_i} < 0.8$）精准识别处于外边界的节点。
+  3. **形态素引导的组织流动与差异性生长 (Turing-Guided Boundary Outgrowth)**:
+     - 未极化边缘机器人沿外轮廓巡航环绕（`ORBIT`），直至抵达极化斑点核心区域时被捕获固化（`WAIT`）；
+     - 在无中央指令与坐标系的条件下，自发沿图灵激活斑点位置生长出指状突起肢体构型（Protrusions / Lobes）。
+  4. **损伤断肢切除与形态自愈再生 (Amputation & Self-Healing Regeneration)**:
+     - 剪切切断部分突起指状分支后，剩余群体红外拓扑重构，自发重新孕育图灵斑点并再次启动组织流动再生新形态。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- turing_morphogenesis
+  ```
+- **运行实验与出图**:
+  ```bash
+  cargo run --release --example 16_scirobotics2018_turing_morphogenesis
+  uv run python python/plot_turing_morphogenesis.py
+  ```
+  *(生成 `output/turing_morphogenesis_snapshots.png` 与 `output/turing_morphogenesis_metrics.png`)*
 
 ---
 

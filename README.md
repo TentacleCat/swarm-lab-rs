@@ -61,6 +61,7 @@
 | 15 | [Minority game with local interactions due to the presence of herding behavior](https://arxiv.org/abs/physics/0512087) | *arXiv* 2005 / *Physica A* | 📄 [打开 PDF](papers/minority-game/01-herding-behavior-physics0512087/paper.pdf) | [`papers/minority-game/01-herding-behavior`](papers/minority-game/01-herding-behavior-physics0512087/) | ⚡ [`13_physics0512087_minority_game_herding.rs`](crates/swarm-cli/examples/13_physics0512087_minority_game_herding.rs) |
 | 16 | [Modeling ant foraging: a chemotaxis approach with pheromones and trail formation](https://arxiv.org/abs/1409.3808) | *J. Theor. Biol.* 2015 | 📄 [打开 PDF](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/paper.pdf) | [`papers/ant-foraging/01-chemotaxis-trail-formation`](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/) | ⚡ [`14_arxiv1409_ant_chemotaxis_foraging.rs`](crates/swarm-cli/examples/14_arxiv1409_ant_chemotaxis_foraging.rs) |
 | 17 | [Provable self-organizing pattern formation by a swarm of robots with limited knowledge](https://doi.org/10.1007/s11721-019-00163-0) | *Swarm Intelligence* 2019 | 📄 [打开 PDF](papers/swarm-robotics/01-provable-pattern-formation-swarm-intel2019/paper.pdf) | [`papers/swarm-robotics/01-provable-pattern-formation`](papers/swarm-robotics/01-provable-pattern-formation-swarm-intel2019/) | ⚡ [`15_springer2019_swarm_robotics_pattern_formation.rs`](crates/swarm-cli/examples/15_springer2019_swarm_robotics_pattern_formation.rs) |
+| 18 | [Morphogenesis in robot swarms](https://doi.org/10.1126/scirobotics.aau9178) | *Science Robotics* 2018 | 💻 [参考源码](papers/turing-morphogenesis/01-morphogenesis-scirobotics2018/reference/README.md) | [`papers/turing-morphogenesis/01-morphogenesis`](papers/turing-morphogenesis/01-morphogenesis-scirobotics2018/) | ⚡ [`16_scirobotics2018_turing_morphogenesis.rs`](crates/swarm-cli/examples/16_scirobotics2018_turing_morphogenesis.rs) |
 
 
 ---
@@ -88,10 +89,11 @@ swarm-lab-rs/
 │   │       ├── naming_game/      # 命名博弈与微观动力学 (Direct & LLM 模型)
 │   │       ├── minority_game/    # 少数派博弈与从众羊群效应 (策略表、网络模仿与相变)
 │   │       ├── ant_foraging/     # 蚂蚁趋化觅食与路径自组织涌现 (PDE 连续介质趋化模型)
-│   │       └── swarm_robotics/   # 极简认知群体机器人构型 (Moore 网格、拓扑连通、安全策略与自组织涌现)
+│   │       ├── swarm_robotics/   # 极简认知群体机器人构型 (Moore 网格、拓扑连通、安全策略与自组织涌现)
+│   │       └── turing_morphogenesis/ # 图灵形态发生 (反应-扩散形态素、局域边缘识别、轮廓迁移与自愈再生)
 │   └── swarm-cli/                # 统一仿真命令行工具
 │       ├── Cargo.toml
-│       ├── examples/             # 各篇论文的专属独立复现与出图脚本 (01 ~ 15)
+│       ├── examples/             # 各篇论文的专属独立复现与出图脚本 (01 ~ 16)
 │       └── src/
 │           └── main.rs           # 命令行参数解析、进度条与 CSV 轨迹流式输出
 ├── papers/                       # 论文学习笔记与复现档案 (按拓扑分类)
@@ -101,8 +103,9 @@ swarm-lab-rs/
 │   ├── 2d-plane/                 # 2D 连续平面与环面体系
 │   ├── naming-game/              # 命名博弈复杂网络与大模型群体智能体系
 │   ├── minority-game/            # 少数派博弈、从众效应与金融物理体系
-│   ├── ant-foraging/             # 蚂蚁趋化觅食、信息素化学痕迹与路径自组织涌现
-│   └── swarm-robotics/           # 极简群体机器人自组织构型与无死锁分布式控制
+│   ├── ant_foraging/             # 蚂蚁趋化觅食、信息素化学痕迹与路径自组织涌现
+│   ├── swarm-robotics/           # 极简群体机器人自组织构型与无死锁分布式控制
+│   └── turing-morphogenesis/     # 图灵反应-扩散形态发生与多智能体生物形态自组织
 ├── python/                       # 科学作图与动画渲染脚本
 │   ├── requirements.txt
 │   ├── plot_phases.py            # 相位空间散点图与序参量时间演化曲线
@@ -111,7 +114,8 @@ swarm-lab-rs/
 │   ├── plot_llm_naming_game.py   # LLM 命名博弈多通道相图
 │   ├── plot_minority_game.py     # 少数派博弈波动率相变与市场振荡曲线
 │   ├── plot_ant_chemotaxis.py    # 蚂蚁趋化四场空间分布与时空蚁道演化
-│   └── plot_swarm_pattern_formation.py # 群体机器人构型演化网格切片与收敛统计直方图
+│   ├── plot_swarm_pattern_formation.py # 群体机器人构型演化网格切片与收敛统计直方图
+│   └── plot_turing_morphogenesis.py    # 图灵形态发生多阶段演化快照与动力学时序曲线
 ├── docs/                         # 理论专题文档
 │   └── swarmalator_primer.md     # Swarmalator 理论基础指南与数学推导
 ├── data/                         # 存放仿真轨迹 CSV / 数据缓存 (默认 git-ignore)
