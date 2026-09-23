@@ -1,0 +1,26 @@
+LAB_GUIDE.md
+  h_c76f4ec917e583 395-406,408-415
+crates/swarm-cli/examples/17_springer2024_heterogeneous_swarms.rs
+  h_c76f4ec917e583 28-41,43-46
+crates/swarm-core/src/heterogeneous_swarms/controller.rs
+  h_c76f4ec917e583 1-3,50-59,62,96,99-102,105
+crates/swarm-core/src/heterogeneous_swarms/metrics.rs
+  h_c76f4ec917e583 1-2,56,60-67,69
+crates/swarm-core/src/heterogeneous_swarms/regulatory.rs
+  h_c76f4ec917e583 1-2,43-51,54
+crates/swarm-core/src/heterogeneous_swarms/sensors.rs
+  h_c76f4ec917e583 1-2,47-52,55,58,63-66,69
+crates/swarm-core/src/reference/heterogeneous_swarms.rs
+  h_c76f4ec917e583 8-27,43,49,51,53,55,61-62,64,159-650,657-660,670-707
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ab7a7345e5ba0502a4969120da1a5f95d1092859",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
