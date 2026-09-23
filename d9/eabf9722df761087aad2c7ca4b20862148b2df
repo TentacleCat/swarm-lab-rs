@@ -1,0 +1,26 @@
+LAB_GUIDE.md
+  h_c76f4ec917e583 21,282-283,285-289,301-306
+crates/swarm-cli/examples/15_springer2019_swarm_robotics_pattern_formation.rs
+  h_c76f4ec917e583 25-34
+crates/swarm-core/src/reference/mod.rs
+  h_c76f4ec917e583 13
+crates/swarm-core/src/reference/swarm_robotics.rs
+  h_c76f4ec917e583 1-243
+crates/swarm-core/src/swarm_robotics/policy.rs
+  h_c76f4ec917e583 10-11,36-39,41-42,104,112-113
+crates/swarm-core/src/swarm_robotics/simulator.rs
+  h_c76f4ec917e583 9-10,127-139,141-142
+crates/swarm-core/src/swarm_robotics/state.rs
+  h_c76f4ec917e583 14-15,180-184,187-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d9eabf9722df761087aad2c7ca4b20862148b2df",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
