@@ -1,9 +1,19 @@
-//! # 大模型命名博弈微观动力学模型 (LLM Naming Game)
+//! # 🎯 [实战关卡 7] 大模型多智能体命名博弈微观动力学模型 (LLM Naming Game)
 //!
 //! 论文: "Microscopic dynamics of consensus formation in multi-agent LLM Naming Games" (arXiv:2608.02178, 2026)
+//! 本地文档: `papers/naming-game/02-llm-naming-game-arxiv2026/README.md`
 //!
-//! 本模块实现将经典 Naming Game 的确定性词库检验，替换为温度 $T$ 下基于 LLM 单 Token 判断的
-//! 微观双速率随机通道 $(\pi, \phi)$ 模型。
+//! 在这里你将学习并亲手实现：
+//! 1. 浮点数区段截断与模式匹配：在 `LlmArchitecture::get_rates` 中计算经验微观参数 $(\pi(T), \phi(T))$；
+//! 2. 随机伯努利试验与四通道微观分解：
+//!    - 库内有序通道 $\pi$: True Positive (合法坍缩) 与 False Negative (漏坍缩)
+//!    - 库外无序通道 $\phi$: False Positive (噪声重涂) 与 True Negative (正常扩库)
+//! 3. 滑动窗口 `VecDeque` 状态追踪与微观净漂移算子 $\Delta(t) = m(t)\pi - (1-m(t))\phi$；
+//! 4. 论文两词平均场临界有序相判定条件 $R = 3\pi - 2\phi - 1 > 0$。
+//!
+//! 遇到卡壳可查阅参考答案: `crates/swarm-core/src/reference/llm_naming_game.rs`
+
+#![allow(unused_variables, dead_code)]
 
 use crate::naming_game::network::Network;
 use rand::Rng;
@@ -47,29 +57,24 @@ pub enum LlmArchitecture {
 }
 
 impl LlmArchitecture {
-    /// 根据论文表 1 及实验测量计算在给定解码温度 T 下的有效速率 (pi, phi)
+    /// ## 任务 1: 计算大模型在给定解码温度 T 下的有效通道速率 (pi, phi)
+    ///
+    /// 根据论文表 1 及实测经验拟合公式：
+    /// 1. 温度范围裁剪：$t = \text{temperature.clamp}(0.0, 2.5)$；
+    /// 2. 分架构计算：
+    ///    - `Llama3_1_8B`:
+    ///      $\pi = (1.0 - 0.225 \cdot t).\text{clamp}(0.55, 1.0)$
+    ///      $\phi = (0.05 + 0.225 \cdot t).\text{clamp}(0.05, 0.50)$
+    ///    - `Mistral7B`:
+    ///      $\pi = 0.99$
+    ///      $\phi = (0.02 \cdot \exp(-0.5 \cdot t)).\text{clamp}(0.005, 0.05)$
+    ///    - `Phi3_14B`:
+    ///      $\pi = (0.76 - 0.23 \cdot t).\text{clamp}(0.28, 0.76)$
+    ///      $\phi = (0.01 + 0.015 \cdot t).\text{clamp}(0.01, 0.04)$
+    ///    - `CustomTwoRate { pi, phi }`: 直接解构返回 `(*pi, *phi)`
     pub fn get_rates(&self, temperature: f64) -> (f64, f64) {
-        let t = temperature.clamp(0.0, 2.5);
-        match self {
-            LlmArchitecture::Llama3_1_8B => {
-                let pi = (1.0 - 0.225 * t).clamp(0.55, 1.0);
-                let phi = (0.05 + 0.225 * t).clamp(0.05, 0.50);
-                (pi, phi)
-            }
-            LlmArchitecture::Mistral7B => {
-                // 近确定型：pi 接近 1.0，phi 极低
-                let pi = 0.99;
-                let phi = (0.02 * (-0.5 * t).exp()).clamp(0.005, 0.05);
-                (pi, phi)
-            }
-            LlmArchitecture::Phi3_14B => {
-                // 保守型：phi 几乎为 0，但 pi 随温度严重衰退
-                let pi = (0.76 - 0.23 * t).clamp(0.28, 0.76);
-                let phi = (0.01 + 0.015 * t).clamp(0.01, 0.04);
-                (pi, phi)
-            }
-            LlmArchitecture::CustomTwoRate { pi, phi } => (*pi, *phi),
-        }
+        // TODO: 请按照上述经验公式实现各架构速率计算
+        todo!("【关卡 7 - 任务 1】请实现不同大模型架构在温度 T 下的有效通道速率计算 (pi, phi)");
     }
 }
 
@@ -111,7 +116,9 @@ pub struct LlmNamingGame<G: Network> {
 impl<G: Network> LlmNamingGame<G> {
     pub fn new(network: G, architecture: LlmArchitecture, temperature: f64) -> Self {
         let n = network.num_nodes();
-        let (pi, phi) = architecture.get_rates(temperature);
+        // 允许练习区在 get_rates 尚未实现时优雅处理，若已实现则取对应值
+        let (pi, phi) = std::panic::catch_unwind(|| architecture.get_rates(temperature))
+            .unwrap_or((1.0, 0.0));
 
         Self {
             network,
@@ -136,121 +143,70 @@ impl<G: Network> LlmNamingGame<G> {
         self.network.num_nodes()
     }
 
-    /// 执行一步 LLM Naming Game 博弈
+    /// ## 任务 2: 执行一步 LLM Naming Game 博弈
     ///
-    /// ## 论文 Section II & III 规则：
-    /// 1. 抽取 Speaker $S$ 及从邻居中抽取 Hearer $H$；
-    /// 2. 若 $S$ 为空，发明新词；$S$ 从词库中随机挑词 $w$ 发送；
-    /// 3. **微观通道判定与 LLM 判断模拟**:
-    ///    - 若 $w \in P_H$ (In-inventory):
-    ///      以概率 $\pi(T)$ 判定为 YES（合法坍缩，True Positive）；
-    ///      以概率 $1-\pi(T)$ 判定为 NO（漏坍缩，False Negative）；
-    ///    - 若 $w \notin P_H$ (Out-inventory):
-    ///      以概率 $\phi(T)$ 判定为 YES（非法重涂，False Positive）；
-    ///      以概率 $1-\phi(T)$ 判定为 NO（正常未命中，True Negative）；
+    /// ### 论文 Section II & III 规则：
+    /// 1. **对局抽取**:
+    ///    - 均匀随机选择一个说话者 $S \in [0, N)$；
+    ///    - 从 $S$ 的网络邻居中均匀随机选择听者 $H$（调用 `self.network.random_neighbor(speaker, rng)`）。
+    ///
+    /// 2. **说话者传词**:
+    ///    - 若 $S$ 词库为空，发明新词 `self.next_word_id`，存入 $V_S$，并使 `next_word_id += 1`；
+    ///    - 从 $V_S$ 中均匀随机抽取一个词汇 $w$ 传达给听者 $H$。
+    ///
+    /// 3. **微观通道判定与 LLM 随机回答**:
+    ///    - 检查词汇是否在听者库内：`let is_in_inventory = self.inventories[hearer].contains(&word);`
+    ///    - 若在库内 (`is_in_inventory == true`):
+    ///      - 以概率 $\pi$ 回答 YES（合法坍缩，`ChannelOutcome::TruePositive`，`self.tp_count += 1`）；
+    ///      - 以概率 $1-\pi$ 回答 NO（漏坍缩，`ChannelOutcome::FalseNegative`，`self.fn_count += 1`）；
+    ///    - 若在库外 (`is_in_inventory == false`):
+    ///      - 以概率 $\phi$ 回答 YES（非法重涂，`ChannelOutcome::FalsePositive`，`self.fp_count += 1`）；
+    ///      - 以概率 $1-\phi$ 回答 NO（正常收纳，`ChannelOutcome::TrueNegative`，`self.tn_count += 1`）；
+    ///    - 维护滑动窗口：若 `recent_history.len() >= self.window_size` 则 `pop_front()`，并将本次 `channel` `push_back()`。
+    ///
     /// 4. **状态更新**:
-    ///    - 若判定为 YES（包含 TP 与 FP 重涂）：
-    ///      双方坍缩为 $\{w\}$：$P_S \leftarrow \{w\}, P_H \leftarrow \{w\}$；
+    ///    - 若判定为 YES（包含 TP 与 FP 噪声重涂）：
+    ///      双方词库均清空并坍缩为仅包含 $\{w\}$：$V_S \leftarrow \{w\}, V_H \leftarrow \{w\}$；
     ///    - 若判定为 NO（包含 FN 与 TN）：
-    ///      听者追加词汇：$P_H \leftarrow P_H \cup \{w\}$（若已包含则保持原样）。
+    ///      听者将该词加入自身词库：$V_H \leftarrow V_H \cup \{w\}$；
+    ///
+    /// 5. **自增步数并返回结果快照**:
+    ///    - `self.time_step += 1`；
+    ///    - 返回 `LlmInteractionResult`。
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> LlmInteractionResult {
-        let n = self.num_agents();
-
-        // 1. 随机对局对
-        let speaker = rng.gen_range(0..n);
-        let hearer = self.network.random_neighbor(speaker, rng);
-
-        // 2. 说话者传词
-        if self.inventories[speaker].is_empty() {
-            let new_word = self.next_word_id;
-            self.next_word_id += 1;
-            self.inventories[speaker].insert(new_word);
-        }
-
-        let speaker_inv = &self.inventories[speaker];
-        let chosen_idx = rng.gen_range(0..speaker_inv.len());
-        let word = *speaker_inv.iter().nth(chosen_idx).unwrap();
-
-        // 3. 微观通道与随机决策
-        let is_in_inventory = self.inventories[hearer].contains(&word);
-
-        let (llm_accepted, channel) = if is_in_inventory {
-            // 库内通道
-            if rng.gen_bool(self.pi) {
-                self.tp_count += 1;
-                (true, ChannelOutcome::TruePositive)
-            } else {
-                self.fn_count += 1;
-                (false, ChannelOutcome::FalseNegative)
-            }
-        } else {
-            // 库外通道
-            if rng.gen_bool(self.phi) {
-                self.fp_count += 1;
-                (true, ChannelOutcome::FalsePositive)
-            } else {
-                self.tn_count += 1;
-                (false, ChannelOutcome::TrueNegative)
-            }
-        };
-
-        // 维护滑动窗口
-        if self.recent_history.len() >= self.window_size {
-            self.recent_history.pop_front();
-        }
-        self.recent_history.push_back(channel);
-
-        // 4. 状态更新
-        let collapse_triggered = llm_accepted;
-        if collapse_triggered {
-            // 坍缩触发（合法共识 或 噪声重涂）
-            self.inventories[speaker].clear();
-            self.inventories[speaker].insert(word);
-
-            self.inventories[hearer].clear();
-            self.inventories[hearer].insert(word);
-        } else {
-            // 未触发坍缩，听者收录该词
-            self.inventories[hearer].insert(word);
-        }
-
-        self.time_step += 1;
-
-        LlmInteractionResult {
-            speaker,
-            hearer,
-            transmitted_word: word,
-            is_in_inventory,
-            llm_accepted,
-            channel,
-            collapse_triggered,
-        }
+        // TODO: 请按照上述规则实现四通道博弈单步 step
+        todo!("【关卡 7 - 任务 2】请实现大模型四通道微观单步博弈规则 step");
     }
 
-    /// 在库交互比例 m(t)（滑动窗口估计）
+    /// ## 任务 3: 滑动窗口在库比例 $m(t)$ 与微观净漂移算子 $\Delta(t)$
+    ///
+    /// ### 1. 在库交互比例 $m(t)$ (`in_inventory_fraction`)
+    /// - 统计 `self.recent_history` 中处于库内通道（即 `TruePositive` 或 `FalseNegative`）的事件占比；
+    /// - 若历史为空则返回 `0.0`。
     pub fn in_inventory_fraction(&self) -> f64 {
-        if self.recent_history.is_empty() {
-            return 0.0;
-        }
-        let in_inv = self
-            .recent_history
-            .iter()
-            .filter(|&&c| c == ChannelOutcome::TruePositive || c == ChannelOutcome::FalseNegative)
-            .count();
-        in_inv as f64 / self.recent_history.len() as f64
+        // TODO: 计算在库事件的滑动窗口经验比例 m(t)
+        todo!("【关卡 7 - 任务 3】请实现滑动窗口在库比例 in_inventory_fraction");
     }
 
-    /// 微观净有序漂移算子 Delta(t) = m(t)*pi - (1 - m(t))*phi
+    /// ### 2. 微观净有序漂移算子 $\Delta(t)$ (`drift_proxy`)
+    ///
+    /// 公式: $\Delta(t) = m(t) \cdot \pi - (1 - m(t)) \cdot \phi$
+    /// - 当 $\Delta(t) > 0$ 时，有序坍缩速率超越无序重涂速率，系统具有向单一共识收敛的微观驱动力。
     pub fn drift_proxy(&self) -> f64 {
-        let m = self.in_inventory_fraction();
-        m * self.pi - (1.0 - m) * self.phi
+        // TODO: 结合 in_inventory_fraction() 计算漂移算子
+        todo!("【关卡 7 - 任务 3】请实现微观净漂移算子 drift_proxy");
     }
 
-    /// 理论两词平均场有序条件 R = 3*pi - 2*phi - 1
-    /// 当 R > 0 时，系统位于有序相（能够自发破缺收敛到单一词汇）
+    /// ## 任务 4: 理论两词平均场临界有序相判定指标 $R$
+    ///
+    /// 论文核心相变公式 (Section III):
+    /// $$R \equiv 3\pi - 2\phi - 1$$
+    /// - 当 $R > 0$ 时，系统位于有序相（能够自发破缺收敛到单一共识）；
+    /// - 当 $R < 0$ 时，系统位于无序相（被漏坍缩与噪声重涂主导，无法达成共识）。
     #[inline]
     pub fn ordering_parameter_r(&self) -> f64 {
-        3.0 * self.pi - 2.0 * self.phi - 1.0
+        // TODO: 实现两词平均场有序度指标 R
+        todo!("【关卡 7 - 任务 4】请实现两词平均场临界有序相判定指标 ordering_parameter_r");
     }
 
     /// 智能体平均词汇库大小 bar{k}(t) = 1/N sum |P_i|

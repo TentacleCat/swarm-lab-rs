@@ -129,44 +129,109 @@ mod tests {
         assert!(converged, "8 个智能体的完全图在 20,000 步内必能达成全网共识");
     }
 
+    // =========================================================================
+    // 🎯 [关卡 7 单元测试] 大模型命名博弈四通道动力学与平均场相变
+    // =========================================================================
+
     #[test]
-    fn test_llm_naming_game_channels_and_ordering() {
-        let mut rng = StdRng::seed_from_u64(42);
-        let graph = CompleteGraph::new(4);
+    fn test_llm_task1_rates() {
+        // LLaMA-3.1:8B 在 T=1.0: pi = 1.0 - 0.225 = 0.775, phi = 0.05 + 0.225 = 0.275
+        let (pi_llama, phi_llama) = LlmArchitecture::Llama3_1_8B.get_rates(1.0);
+        assert!((pi_llama - 0.775).abs() < 1e-4, "LLaMA T=1.0 pi 计算错误");
+        assert!((phi_llama - 0.275).abs() < 1e-4, "LLaMA T=1.0 phi 计算错误");
 
-        // 1. 验证临界有序指标 R = 3*pi - 2*phi - 1
-        let game_ordered = LlmNamingGame::new(
-            graph.clone(),
-            LlmArchitecture::CustomTwoRate { pi: 0.9, phi: 0.1 },
-            0.5,
-        );
-        // R = 3*0.9 - 2*0.1 - 1 = 2.7 - 0.2 - 1 = 1.5 > 0
-        assert!((game_ordered.ordering_parameter_r() - 1.5).abs() < 1e-6);
+        // Mistral:7B 温度盲性: pi = 0.99
+        let (pi_mistral, phi_mistral) = LlmArchitecture::Mistral7B.get_rates(0.0);
+        assert_eq!(pi_mistral, 0.99, "Mistral pi 应为 0.99");
+        assert!((phi_mistral - 0.02).abs() < 1e-4, "Mistral phi(0) 应为 0.02");
 
-        let game_disordered = LlmNamingGame::new(
-            graph.clone(),
-            LlmArchitecture::CustomTwoRate { pi: 0.3, phi: 0.4 },
-            1.5,
-        );
-        // R = 3*0.3 - 2*0.4 - 1 = 0.9 - 0.8 - 1 = -0.9 < 0
-        assert!((game_disordered.ordering_parameter_r() - (-0.9)).abs() < 1e-6);
+        // Phi-3:14B 在 T=0.0: pi = 0.76, phi = 0.01
+        let (pi_phi, phi_phi) = LlmArchitecture::Phi3_14B.get_rates(0.0);
+        assert!((pi_phi - 0.76).abs() < 1e-4, "Phi-3 T=0.0 pi 应为 0.76");
+        assert!((phi_phi - 0.01).abs() < 1e-4, "Phi-3 T=0.0 phi 应为 0.01");
 
-        // 2. 测试确定性极限 (pi=1.0, phi=0.0) 下的小系统收敛
-        let mut game_det = LlmNamingGame::new(
+        // 截断测试: T > 2.5 应被截断在 2.5
+        let (pi_clamp, phi_clamp) = LlmArchitecture::Llama3_1_8B.get_rates(10.0);
+        assert!((pi_clamp - 0.55).abs() < 1e-4, "LLaMA 低温下界截断应为 0.55");
+        assert!((phi_clamp - 0.50).abs() < 1e-4, "LLaMA 高温上界截断应为 0.50");
+    }
+
+    #[test]
+    fn test_llm_task2_step_mechanism() {
+        let mut rng = StdRng::seed_from_u64(1234);
+        let graph = CompleteGraph::new(2);
+
+        // 设定极端情况：pi=1.0 (库内必回答 YES), phi=0.0 (库外必回答 NO)
+        let mut game = LlmNamingGame::new(
             graph,
             LlmArchitecture::CustomTwoRate { pi: 1.0, phi: 0.0 },
             0.0,
         );
-        let mut converged = false;
-        for _ in 0..10_000 {
-            game_det.step(&mut rng);
-            if game_det.is_consensus() {
-                converged = true;
-                break;
-            }
+        game.pi = 1.0;
+        game.phi = 0.0;
+
+        // 步骤 1: 两人初态为空，Speaker 发明词汇并传达给 Hearer
+        // 词汇不在 Hearer 库内，由于 phi=0，必触发 TrueNegative (Hearer 收纳该词汇)
+        let res1 = game.step(&mut rng);
+        assert_eq!(res1.channel, ChannelOutcome::TrueNegative);
+        assert!(!res1.collapse_triggered);
+        assert_eq!(game.inventories[res1.hearer].len(), 1);
+
+        // 步骤 2: 此时双方均已掌握该词汇，下次交互必为库内且 pi=1.0，必触发 TruePositive (坍缩)
+        let res2 = game.step(&mut rng);
+        assert_eq!(res2.channel, ChannelOutcome::TruePositive);
+        assert!(res2.collapse_triggered);
+        assert!(game.is_consensus());
+    }
+
+    #[test]
+    fn test_llm_task3_drift_and_fraction() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let graph = CompleteGraph::new(5);
+        let mut game = LlmNamingGame::new(
+            graph,
+            LlmArchitecture::CustomTwoRate { pi: 0.8, phi: 0.2 },
+            0.5,
+        );
+        game.pi = 0.8;
+        game.phi = 0.2;
+
+        for _ in 0..100 {
+            game.step(&mut rng);
         }
-        assert!(converged, "确定性通道 (pi=1, phi=0) 必定快速收敛");
-        assert_eq!(game_det.distinct_words(), 1);
+
+        let m = game.in_inventory_fraction();
+        assert!(m >= 0.0 && m <= 1.0, "在库比例 m(t) 必须位于 [0, 1] 区间");
+
+        let drift = game.drift_proxy();
+        let expected_drift = m * 0.8 - (1.0 - m) * 0.2;
+        assert!((drift - expected_drift).abs() < 1e-6, "漂移算子 Delta(t) 计算错误");
+    }
+
+    #[test]
+    fn test_llm_task4_ordering_parameter() {
+        let graph = CompleteGraph::new(4);
+
+        // 1. 验证临界有序指标 R = 3*pi - 2*phi - 1
+        let mut game_ordered = LlmNamingGame::new(
+            graph.clone(),
+            LlmArchitecture::CustomTwoRate { pi: 0.9, phi: 0.1 },
+            0.5,
+        );
+        game_ordered.pi = 0.9;
+        game_ordered.phi = 0.1;
+        // R = 3*0.9 - 2*0.1 - 1 = 2.7 - 0.2 - 1 = 1.5 > 0
+        assert!((game_ordered.ordering_parameter_r() - 1.5).abs() < 1e-6);
+
+        let mut game_disordered = LlmNamingGame::new(
+            graph,
+            LlmArchitecture::CustomTwoRate { pi: 0.3, phi: 0.4 },
+            1.5,
+        );
+        game_disordered.pi = 0.3;
+        game_disordered.phi = 0.4;
+        // R = 3*0.3 - 2*0.4 - 1 = 0.9 - 0.8 - 1 = -0.9 < 0
+        assert!((game_disordered.ordering_parameter_r() - (-0.9)).abs() < 1e-6);
     }
 }
 

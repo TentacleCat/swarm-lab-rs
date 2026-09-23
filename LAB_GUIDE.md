@@ -14,7 +14,9 @@ crates/swarm-core/src/
 │   ├── integrator.rs
 │   ├── nature2017_2d.rs
 │   ├── ring_1d.rs
-│   └── naming_game.rs
+│   ├── naming_game.rs
+│   ├── llm_naming_game.rs
+│   └── heterogeneous_swarms.rs
 │
 ├── metrics.rs        # 🎯 [实战关卡 1] 切片借用与序参量计算 (从这里开始！)
 ├── integrator.rs     # 🎯 [实战关卡 2] 可变借用、内存复用与 RK4 积分器
@@ -175,19 +177,30 @@ crates/swarm-core/src/
 ### 🎯 关卡 7: 大模型多智能体命名博弈与微观动力学（2026 LLM Naming Game）
 - **论文**: *"Microscopic dynamics of consensus formation in multi-agent LLM Naming Games"*, [arXiv:2608.02178](https://arxiv.org/abs/2608.02178) (2026)
 - **本地文档**: [`papers/naming-game/02-llm-naming-game-arxiv2026/README.md`](papers/naming-game/02-llm-naming-game-arxiv2026/README.md)
-- **代码文件**: [`crates/swarm-core/src/naming_game/llm_model.rs`](crates/swarm-core/src/naming_game/llm_model.rs)
-- **学习的核心物理与统计机制**:
-  1. **微观四通道解耦**: 将 LLM 听者回答解耦为库内通道固化率 $\pi(T) \equiv P(\text{YES} \mid w \in P_j)$ 与库外通道重涂率 $\phi(T) \equiv P(\text{YES} \mid w \notin P_j)$；
-  2. **微观漂移与平均场临界线**: 验证两词平均场临界有序相条件 $3\pi - 2\phi - 1 > 0$；
-  3. **三大模型架构的温度特征**:
-     - LLaMA-3.1:8B: 宽容型，重涂噪声主导，$t_c \sim e^{0.67 T}$；
-     - Mistral:7B: 近确定型，温度盲性（$\alpha \approx 0$）；
-     - Phi-3:14B: 保守型，漏坍缩主导，呈现显著的“逆温度序”（低温词库暴涨至 30+ 形成瓶颈）。
+- **代码文件**:
+  - 实战练习区: [`crates/swarm-core/src/naming_game/llm_model.rs`](crates/swarm-core/src/naming_game/llm_model.rs)
+  - 标准参考答案: [`crates/swarm-core/src/reference/llm_naming_game.rs`](crates/swarm-core/src/reference/llm_naming_game.rs)
+- **学习的核心 Rust 语法与设计模式**:
+  1. **浮点数区段截断与枚举模式匹配**: 使用 `.clamp(min, max)` 与 `match self` 计算模型有效两速率 $(\pi(T), \phi(T))$；
+  2. **双通道伯努利试验 (`rng.gen_bool`)**: 依据微观通道概率将交互精确分类为 `TruePositive`、`FalseNegative`、`FalsePositive`、`TrueNegative`；
+  3. **双端队列滑动窗口 (`VecDeque`)**: 维护固定步长历史通道事件，实现无偏平滑估计在库比例 $m(t)$；
+  4. **动力系统平均场指标计算**: 计算微观净漂移算子 $\Delta(t) = m\pi - (1-m)\phi$ 与临界两词有序判据 $R = 3\pi - 2\phi - 1$。
+- **任务目标**:
+  1. 在 `LlmArchitecture::get_rates` 中实现不同大模型架构（LLaMA-3.1:8B、Mistral:7B、Phi-3:14B）在温度 $T$ 下的经验速率计算；
+  2. 在 `LlmNamingGame::step` 中实现四通道随机决策判定与双方词库坍缩/扩充更新；
+  3. 在 `in_inventory_fraction` 与 `drift_proxy` 中实现滑动窗口统计与净有序漂移算子；
+  4. 在 `ordering_parameter_r` 中实现两词平均场相变判定指标 $R$。
+- **验证命令**:
+  ```bash
+  cargo test -p swarm-core -- naming_game::tests::test_llm
+  ```
+  *(当看到 `test result: ok. 4 passed` 时，即通关本卡！)*
 - **运行实验与出图**:
   ```bash
   cargo run --release --example 12_arxiv2026_llm_naming_game
+  uv run python python/plot_llm_naming_game.py
   ```
-  *(运行完毕自动生成 `output/llm_naming_game_trajectories.png` 与 `output/llm_naming_game_phase_diagram.png`)*
+  *(脚本默认使用参考答案一键出图，生成 `output/llm_naming_game_trajectories.png` 与 `output/llm_naming_game_phase_diagram.png`；手写完成后可切换为自己的实现！)*
 
 ---
 
