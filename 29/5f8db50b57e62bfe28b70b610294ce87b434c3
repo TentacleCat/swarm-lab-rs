@@ -1,0 +1,28 @@
+LAB_GUIDE.md
+  h_c76f4ec917e583 22-25,479,500-513,515-522
+crates/swarm-cli/examples/19_arxiv2401_sons_self_organizing_hierarchy.rs
+  h_c76f4ec917e583 19-31,34-38
+crates/swarm-core/src/reference/mod.rs
+  h_c76f4ec917e583 18
+crates/swarm-core/src/reference/sons_hierarchy.rs
+  h_c76f4ec917e583 1-689
+crates/swarm-core/src/sons_hierarchy/allocator.rs
+  h_c76f4ec917e583 1-2,49-61,68
+crates/swarm-core/src/sons_hierarchy/controller.rs
+  h_c76f4ec917e583 1-2,62-75,83
+crates/swarm-core/src/sons_hierarchy/metrics.rs
+  h_c76f4ec917e583 1-2,35-46,61-70
+crates/swarm-core/src/sons_hierarchy/tree.rs
+  h_c76f4ec917e583 1-2,49-59,61,64,66-75,82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "295f8db50b57e62bfe28b70b610294ce87b434c3",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
