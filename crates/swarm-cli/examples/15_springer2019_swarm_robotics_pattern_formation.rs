@@ -22,7 +22,16 @@ use std::fs::{self, File};
 use std::io::{BufWriter, Write};
 use std::process::Command;
 use std::time::Instant;
-use swarm_core::swarm_robotics::{ExecutionMode, Pattern, Policy, SwarmWorld};
+// =========================================================================
+// 💡 模式切换：
+// 1. 默认使用 reference 参考答案，确保一键直接出效果和复现论文结果；
+// 2. 当你完成了关卡 10 的练习后，可取消注释下方、注释上方，测试自己手写的代码！
+// =========================================================================
+use swarm_core::reference::swarm_robotics::SwarmWorldReference as SwarmWorld;
+use swarm_core::swarm_robotics::{ExecutionMode, Pattern, Policy};
+
+// 练习区模式（完成实战后取消注释）：
+// use swarm_core::swarm_robotics::{ExecutionMode, Pattern, Policy, SwarmWorld};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🤖 =================================================================");

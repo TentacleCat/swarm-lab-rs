@@ -11,6 +11,8 @@
 //! - $l_7$: West (-1, 0)
 //! - $l_8$: North-West (-1, 1)
 
+#![allow(unused_variables, dead_code)]
+
 use std::fmt;
 
 /// 8 个离散移动与感知方向
@@ -175,12 +177,15 @@ impl LocalState {
         cliques
     }
 
-    /// 判定是否为单纯形状态（Simplicial State, Definition 5）：
-    /// 邻居构成恰好一个连通团簇（Clique）
+    /// ## 任务 1: 判定是否为单纯形状态（Simplicial State, Definition 5）
+    ///
+    /// 论文核心定义：
+    /// 当且仅当智能体的邻居非空 (`neighbor_count() > 0`) 且所有邻居在诱导子图上恰好构成单个连通团簇 (`count_cliques() == 1`) 时，
+    /// 该节点处于单纯形状态。
     #[inline(always)]
     pub fn is_simplicial(self) -> bool {
-        let c = self.neighbor_count();
-        c > 0 && self.count_cliques() == 1
+        // TODO: 实现单纯形状态分类
+        todo!("【关卡 10 - 任务 1】请实现单纯形状态判定 is_simplicial");
     }
 }
 

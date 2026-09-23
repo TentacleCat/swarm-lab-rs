@@ -7,6 +7,8 @@
 //! - 构型自组织策略 $\Pi_f = \Pi_{\text{safe}} \setminus (S_{\text{des}} \times A)$ 的合成；
 //! - 匹配方向矩阵 $D(S_{\text{des}})$ 与匹配度矩阵 $M(S_{\text{des}})$。
 
+#![allow(unused_variables, dead_code, unused_imports)]
+
 use super::state::{Direction, LocalState};
 use std::collections::{BTreeSet, HashSet};
 
@@ -31,23 +33,13 @@ impl Pattern {
         self.coords.len()
     }
 
-    /// 提取该构型对应的期望局部状态集合 $S_{\text{des}}$
+    /// ## 任务 2: 提取该构型对应的期望局部状态集合 $S_{\text{des}}$
+    ///
+    /// 遍历构型中的所有机器人坐标 $(x, y)$，检测 8 个方向 $(x+\Delta x, y+\Delta y)$ 是否存在同伴，
+    /// 构建其局域状态 `LocalState` 并去重收集为集合。
     pub fn extract_desired_states(&self) -> Vec<LocalState> {
-        let coord_set: HashSet<(i32, i32)> = self.coords.iter().cloned().collect();
-        let mut state_set = BTreeSet::new();
-
-        for &(x, y) in &self.coords {
-            let mut state = LocalState::EMPTY;
-            for dir in Direction::ALL {
-                let (dx, dy) = dir.offset();
-                if coord_set.contains(&(x + dx, y + dy)) {
-                    state.set_neighbor(dir, true);
-                }
-            }
-            state_set.insert(state);
-        }
-
-        state_set.into_iter().collect()
+        // TODO: 请实现期望局部状态提取
+        todo!("【关卡 10 - 任务 2】请实现几何构型期望局部状态提取 extract_desired_states");
     }
 
     /// 4 机器人三角形构型 (Tri-4)
@@ -109,7 +101,7 @@ pub struct Policy {
 }
 
 impl Policy {
-    /// 判定动作是否会导致局部邻域断连（Separation Check）
+    /// ## 任务 3: 判定动作是否会导致局部邻域断连（Separation Check）
     ///
     /// 给定机器人处于 $(0, 0)$，其当前邻居集合为 $N$。
     /// 机器人若移动至新位置 $p_{\text{new}} = (\Delta x_k, \Delta y_k)$，
@@ -117,38 +109,8 @@ impl Policy {
     /// 任意两个节点如果 Chebyshev 距离 $\le 1$，则存在一条无向边。
     /// 若该图的连通分量数 $> 1$，说明这次移动会使原有邻居断连或机器人脱离原有邻居！
     pub fn is_separation_action(state: LocalState, dir: Direction) -> bool {
-        let neighbors = state.neighbor_coords();
-        if neighbors.is_empty() {
-            // 没有邻居，单独移动脱离（在此体系中无孤立机器人允许移动）
-            return true;
-        }
-
-        let p_new = dir.offset();
-        let mut nodes = neighbors;
-        nodes.push(p_new);
-        let n = nodes.len();
-
-        let mut visited = vec![false; n];
-        let mut queue = vec![0];
-        visited[0] = true;
-        let mut count = 0;
-
-        while let Some(curr) = queue.pop() {
-            count += 1;
-            let (cx, cy) = nodes[curr];
-            for j in 0..n {
-                if !visited[j] {
-                    let (nx, ny) = nodes[j];
-                    if (cx - nx).abs() <= 1 && (cy - ny).abs() <= 1 {
-                        visited[j] = true;
-                        queue.push(j);
-                    }
-                }
-            }
-        }
-
-        // 如果访问到的连通节点数不等于总节点数，说明图不连通
-        count != n
+        // TODO: 请实现局部断连动作判定
+        todo!("【关卡 10 - 任务 3】请实现局部断连动作判定 is_separation_action");
     }
 
     /// 预计算全局基础安全策略 $\Pi_{\text{safe}}$

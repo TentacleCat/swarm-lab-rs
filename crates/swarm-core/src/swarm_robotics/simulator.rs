@@ -6,6 +6,8 @@
 //! - 自动生成初始无碰撞单连通拓扑 $P_0$；
 //! - 记录构型演化时间步数与碰撞/断连安全检查。
 
+#![allow(unused_variables, dead_code)]
+
 use super::policy::Policy;
 use super::state::{Direction, LocalState};
 use rand::seq::SliceRandom;
@@ -122,74 +124,22 @@ impl SwarmWorld {
         state
     }
 
-    /// 执行一次离散异步时间步
+    /// ## 任务 4: 执行一次离散异步时间步
+    ///
+    /// ## 规则 (Springer 2019):
+    /// 1. **候选活跃节点搜集**:
+    ///    - 遍历所有机器人 $i \in [0, n)$，获取其当前局部感知状态 `let state = self.get_local_state(i);`；
+    ///    - 若处于 `ExecutionMode::Alt2` 且 `state.neighbor_count() > 5`，跳过该内部拥挤节点；
+    ///    - 获取可用安全动作 `let acts = self.policy.get_actions(state);`，非空则加入活跃候选池；
+    /// 2. **无活跃节点提前返回**: 若活跃池为空，返回 `StepResult::NoActiveAgents`；
+    /// 3. **启发式过滤 (ALT1)**:
+    ///    - 若开启 ALT1/ALT2 且存在非上一轮刚移动的个体，优先在这些个体中抽取；
+    /// 4. **随机执行动作与位移更新**:
+    ///    - 随机挑取一个机器人与其动作 `dir`，更新 `self.positions[*agent_idx]` 与 `self.last_moved_agent`；
+    ///    - `self.step_count += 1`，返回 `StepResult::Moved`。
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> StepResult {
-        let n = self.positions.len();
-
-        // 1. 搜集所有活跃机器人索引与其可选动作
-        let mut active_candidates: Vec<(usize, Vec<Direction>)> = Vec::new();
-
-        for i in 0..n {
-            let state = self.get_local_state(i);
-
-            // ALT2 检查：若邻居数 > 5，跳过该内部节点
-            if self.mode == ExecutionMode::Alt2 && state.neighbor_count() > 5 {
-                continue;
-            }
-
-            let acts = self.policy.get_actions(state);
-            if !acts.is_empty() {
-                active_candidates.push((i, acts.to_vec()));
-            }
-        }
-
-        if active_candidates.is_empty() {
-            return StepResult::NoActiveAgents;
-        }
-
-        // 2. ALT1 冷却过滤：如果存在非上一轮刚移动的活跃个体，则优先在它们之中选
-        let candidates_to_pick = if (self.mode == ExecutionMode::Alt1 || self.mode == ExecutionMode::Alt2)
-            && active_candidates.len() > 1
-        {
-            if let Some(last) = self.last_moved_agent {
-                let filtered: Vec<_> = active_candidates
-                    .iter()
-                    .filter(|(idx, _)| *idx != last)
-                    .cloned()
-                    .collect();
-                if !filtered.is_empty() {
-                    filtered
-                } else {
-                    active_candidates
-                }
-            } else {
-                active_candidates
-            }
-        } else {
-            active_candidates
-        };
-
-        // 3. 均匀随机选取一个机器人与其可用动作
-        let (agent_idx, actions) = candidates_to_pick.choose(rng).unwrap();
-        let dir = *actions.choose(rng).unwrap();
-
-        let from = self.positions[*agent_idx];
-        let (dx, dy) = dir.offset();
-        let to = (from.0 + dx, from.1 + dy);
-
-        // 严格安全防御检查：不可踩入已有机器人的格子
-        debug_assert!(!self.positions.contains(&to), "安全策略绝不应发生碰撞！");
-
-        self.positions[*agent_idx] = to;
-        self.last_moved_agent = Some(*agent_idx);
-        self.step_count += 1;
-
-        StepResult::Moved {
-            agent_idx: *agent_idx,
-            from,
-            to,
-            dir,
-        }
+        // TODO: 请实现群体机器人离散异步单步仿真
+        todo!("【关卡 10 - 任务 4】请实现多智能体异步离散仿真单步 step（含启发式过滤）");
     }
 
     /// 检查集群是否已成功收敛到期望构型：

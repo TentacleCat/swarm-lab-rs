@@ -18,6 +18,7 @@ crates/swarm-core/src/
 │   ├── llm_naming_game.rs
 │   ├── minority_game.rs
 │   ├── ant_foraging.rs
+│   ├── swarm_robotics.rs
 │   └── heterogeneous_swarms.rs
 │
 ├── metrics.rs        # 🎯 [实战关卡 1] 切片借用与序参量计算 (从这里开始！)
@@ -278,10 +279,14 @@ crates/swarm-core/src/
   *(生成 `output/ant_chemotaxis_spatial_fields.png`、`output/ant_chemotaxis_trails_evolution.png` 与 `output/ant_chemotaxis_efficiency.png`)*
 
 ### 🎯 关卡 10: 极简认知群体机器人可证明自组织构型 (Provable Swarm Pattern Formation)
+- **论文**: *"Provable self-organizing pattern formation by a swarm of robots with limited knowledge"*, Mario Coppola et al., (*Swarm Intelligence*, 2019 / Springer)
+- **本地文档**: [`papers/swarm-robotics/01-provable-pattern-formation-swarm-intel2019/README.md`](papers/swarm-robotics/01-provable-pattern-formation-swarm-intel2019/README.md)
 - **代码文件**:
-  - 局域观测与拓扑单纯形分类: [`crates/swarm-core/src/swarm_robotics/state.rs`](crates/swarm-core/src/swarm_robotics/state.rs)
-  - 离线全策略生成与启发式转移矩阵: [`crates/swarm-core/src/swarm_robotics/policy.rs`](crates/swarm-core/src/swarm_robotics/policy.rs)
-  - 异步离散仿真与自组织收敛世界: [`crates/swarm-core/src/swarm_robotics/simulator.rs`](crates/swarm-core/src/swarm_robotics/simulator.rs)
+  - 实战练习区:
+    - 局域观测与拓扑单纯形分类: [`crates/swarm-core/src/swarm_robotics/state.rs`](crates/swarm-core/src/swarm_robotics/state.rs)
+    - 离线全策略生成与局部断连过滤: [`crates/swarm-core/src/swarm_robotics/policy.rs`](crates/swarm-core/src/swarm_robotics/policy.rs)
+    - 异步离散仿真与自组织收敛世界: [`crates/swarm-core/src/swarm_robotics/simulator.rs`](crates/swarm-core/src/swarm_robotics/simulator.rs)
+  - 标准参考答案: [`crates/swarm-core/src/reference/swarm_robotics.rs`](crates/swarm-core/src/reference/swarm_robotics.rs)
 - **学习的核心物理与机器人分布式控制机制**:
   1. **极简感知与动作模型 (Minimalist Sensor/Actuator Model)**:
      - 机器人处于 2D Moore 网格环境，仅感知 8 邻域是否有机器人，状态空间有限且封闭（$s \in \{0, 1\}^8$，共 256 种局部状态）；
@@ -293,8 +298,12 @@ crates/swarm-core/src/
      - 从几何构型模板（如 Triangle-4, Square-4, Hexagon-6 等）中提取所有构成此构型的局部状态集合 $S_{\text{des}}$；
      - 定义构型收敛准则：当且仅当所有机器人均满足 $s_i \in S_{\text{des}}$ 时，群体达到吸收态终止移动。
   4. **启发式收敛加速策略 (ALT1 / ALT2)**:
-     - 匹配方向矩阵 $D(S_{\text{des}})$ 与匹配频次计数 $M(S_{\text{des}})$；
-     - 引导机器人优先选择能更快形成期望邻域结构的动作，显著减少随机抖动与收敛步数。
+     - 冷却过滤与内部拥挤节点限制，显著减少随机抖动与收敛步数。
+- **任务目标**:
+  1. 在 `LocalState::is_simplicial` 中实现基于团簇计数的单纯形节点判定；
+  2. 在 `Pattern::extract_desired_states` 中实现构型到局域期望状态集合 $S_{\text{des}}$ 的映射提取；
+  3. 在 `Policy::is_separation_action` 中实现移动后的邻域诱导子图连通性检查（防拓扑断连撕裂）；
+  4. 在 `SwarmWorld::step` 中实现异步离散多智能体仿真单步（含候选池提取与 ALT1/ALT2 启发式）。
 - **验证命令**:
   ```bash
   cargo test -p swarm-core -- swarm_robotics
