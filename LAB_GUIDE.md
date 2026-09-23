@@ -16,6 +16,7 @@ crates/swarm-core/src/
 │   ├── ring_1d.rs
 │   ├── naming_game.rs
 │   ├── llm_naming_game.rs
+│   ├── minority_game.rs
 │   └── heterogeneous_swarms.rs
 │
 ├── metrics.rs        # 🎯 [实战关卡 1] 切片借用与序参量计算 (从这里开始！)
@@ -208,18 +209,26 @@ crates/swarm-core/src/
 - **论文**: *"Minority game with local interactions due to the presence of herding behavior"*, A. L. M. Vilela, D. O. Cajueiro et al., [physics/0512087](https://arxiv.org/abs/physics/0512087)
 - **本地文档**: [`papers/minority-game/01-herding-behavior-physics0512087/README.md`](papers/minority-game/01-herding-behavior-physics0512087/README.md)
 - **代码文件**:
-  - 策略表与虚拟打分: [`crates/swarm-core/src/minority_game/strategy.rs`](crates/swarm-core/src/minority_game/strategy.rs)
-  - 波动率与相变统计: [`crates/swarm-core/src/minority_game/metrics.rs`](crates/swarm-core/src/minority_game/metrics.rs)
-  - 网络局域模仿状态机: [`crates/swarm-core/src/minority_game/model.rs`](crates/swarm-core/src/minority_game/model.rs)
+  - 实战练习区:
+    - 策略表与虚拟打分: [`crates/swarm-core/src/minority_game/strategy.rs`](crates/swarm-core/src/minority_game/strategy.rs)
+    - 波动率与相变统计: [`crates/swarm-core/src/minority_game/metrics.rs`](crates/swarm-core/src/minority_game/metrics.rs)
+    - 网络局域模仿状态机: [`crates/swarm-core/src/minority_game/model.rs`](crates/swarm-core/src/minority_game/model.rs)
+  - 标准参考答案: [`crates/swarm-core/src/reference/minority_game.rs`](crates/swarm-core/src/reference/minority_game.rs)
 - **学习的核心物理与统计机制**:
   1. **历史状态位掩码操作**: 将长度为 $M$ 的过去胜负二值序列打包为一个 `usize`（$0 \dots 2^M - 1$），实现 $O(1)$ 常数时间查表；
   2. **虚拟打分（Virtual Scoring）**: 每个 Agent 拥有 $S$ 个独立策略表，每轮不论是否执行，均根据真实少数派胜者更新策略虚拟分数 $U_{i, s}(t+1) = U_{i, s}(t) - a_i^s(t) \cdot \text{sgn}(A(t))$；
   3. **网络局域从众（Herding Imitation）**: 遍历 `network.neighbors(agent_id)`，寻找邻域得分最高者。若自身得分低于邻居最高分，则放弃自主策略，盲从模仿该邻居动作；
   4. **相变破坏与市场振荡**: 验证经典 $\alpha_c \approx 0.34$ 最优协调相为何在强局部从众下被彻底抹平，波动率 $\sigma^2/N$ 暴涨数倍。
+- **任务目标**:
+  1. 在 `Strategy::update_score` 中实现虚拟策略积分无偏更新规则；
+  2. 在 `MgAgent::best_strategy_index` 中实现多策略最优挑选；
+  3. 在 `normalized_volatility` 中实现市场归一化方差 $\sigma^2 / N$；
+  4. 在 `MinorityGame::step` 中实现含局域邻居从众盲从、市场出清与历史位移更新的单步状态机。
 - **验证命令**:
   ```bash
   cargo test -p swarm-core -- minority_game
   ```
+  *(当看到 `test result: ok. 4 passed` 时，即通关本卡！)*
 - **运行实验与出图**:
   ```bash
   cargo run --release --example 13_physics0512087_minority_game_herding

@@ -2,6 +2,8 @@
 //!
 //! 论文: "Minority game with local interactions due to the presence of herding behavior" (physics/0512087)
 
+#![allow(unused_variables, dead_code)]
+
 use crate::minority_game::strategy::MgAgent;
 use crate::naming_game::network::Network;
 use rand::Rng;
@@ -60,93 +62,30 @@ impl<G: Network> MinorityGame<G> {
         self.agents.len()
     }
 
-    /// 执行一步少数派博弈，返回当前时刻全网净动作 Attendance A(t) = sum a_i
+    /// ## 任务 4: 执行一步少数派博弈 (单步状态机)
     ///
     /// ## 规则 (physics/0512087 Section II):
     /// 1. **个体决策**:
-    ///    - 若未开启从众 (`!herding_enabled` 或 `network == None`):
-    ///      每位个体执行自身当前虚拟得分最高策略所给出的动作；
-    ///    - 若开启从众 (`herding_enabled && network != None`):
-    ///      个体 i 查看自身所有邻居，找到邻域中最高策略得分最高者 $j^*$；
-    ///      - 若 $\text{score}(j^*) > \text{score}(i)$: 个体 $i$ 放弃自我，盲从 $j^*$ 的最佳动作；
-    ///      - 若 $\text{score}(j^*) \le \text{score}(i)$: 个体 $i$ 坚持自己的策略动作。
+    ///    - 若未开启从众 (`!self.herding_enabled || self.network.is_none()`):
+    ///      每位个体执行自身当前虚拟得分最高策略所给出的动作：`agent.self_action(self.history)`；
+    ///    - 若开启从众 (`self.herding_enabled && self.network.is_some()`):
+    ///      个体 $i$ 查看自身所有邻居，找到邻域中最高策略得分最高者 $j^*$；
+    ///      - 若 $\text{score}(j^*) > \text{score}(i)$: 个体 $i$ 放弃自我，模仿采纳 $j^*$ 的最佳动作；
+    ///      - 若 $\text{score}(j^*) \le \text{score}(i)$ 或邻居为空: 个体 $i$ 坚持自己的策略动作。
     /// 2. **胜负判定与市场出清**:
-    ///    - $A(t) = \sum a_i(t)$；
+    ///    - 净出席数 $A(t) = \sum a_i(t)$；
     ///    - 若 $A(t) < 0$，少数派动作为 $+1$（选 $+1$ 者胜）；
     ///    - 若 $A(t) > 0$，少数派动作为 $-1$（选 $-1$ 者胜）；
-    ///    - 若 $A(t) = 0$，随机抽取 $\pm 1$。
+    ///    - 若 $A(t) = 0$，以 0.5 概率随机抽取 $\pm 1$。
     /// 3. **虚拟策略积分更新与历史推进**:
-    ///    - 所有智能体手头的所有策略均根据本轮实际胜负更新虚拟积分；
-    ///    - 历史状态左移 1 位并压入获胜结果。
+    ///    - 所有智能体手头的所有策略均调用 `strat.update_score(winning_action, self.history)`；
+    ///    - 历史状态左移 1 位并压入获胜结果（1 为 1，-1 为 0）：
+    ///      `let bit = if winning_action == 1 { 1 } else { 0 };`
+    ///      `self.history = ((self.history << 1) | bit) & ((1 << self.memory) - 1);`
+    ///    - `self.time_step += 1`，返回 $A(t)$。
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> i32 {
-        let n = self.num_agents();
-        let mut actions = Vec::with_capacity(n);
-
-        // 1. 个体决策（含从众判定）
-        if self.herding_enabled && self.network.is_some() {
-            let net = self.network.as_ref().unwrap();
-
-            for i in 0..n {
-                let my_score = self.agents[i].highest_score();
-                let neighbors = net.neighbors(i);
-
-                if neighbors.is_empty() {
-                    actions.push(self.agents[i].self_action(self.history));
-                    continue;
-                }
-
-                // 寻找最懂行邻居 j*
-                let mut best_neighbor = neighbors[0];
-                let mut max_neighbor_score = self.agents[best_neighbor].highest_score();
-
-                for &nb in neighbors.iter().skip(1) {
-                    let s = self.agents[nb].highest_score();
-                    if s > max_neighbor_score {
-                        max_neighbor_score = s;
-                        best_neighbor = nb;
-                    }
-                }
-
-                if max_neighbor_score > my_score {
-                    // 从众跟风：采纳邻居 j* 的最佳策略动作
-                    actions.push(self.agents[best_neighbor].self_action(self.history));
-                } else {
-                    // 坚持自己的动作
-                    actions.push(self.agents[i].self_action(self.history));
-                }
-            }
-        } else {
-            // 标准独立博弈
-            for agent in &self.agents {
-                actions.push(agent.self_action(self.history));
-            }
-        }
-
-        // 2. 计算净动作 A(t) 与获胜动作 W(t)
-        let attendance: i32 = actions.iter().map(|&a| a as i32).sum();
-
-        let winning_action = if attendance < 0 {
-            1
-        } else if attendance > 0 {
-            -1
-        } else {
-            if rng.gen_bool(0.5) { 1 } else { -1 }
-        };
-
-        // 3. 更新所有智能体的全部策略积分
-        for agent in &mut self.agents {
-            for strat in &mut agent.strategies {
-                strat.update_score(winning_action, self.history);
-            }
-        }
-
-        // 4. 更新历史位串
-        let bit = if winning_action == 1 { 1 } else { 0 };
-        let mask = (1 << self.memory) - 1;
-        self.history = ((self.history << 1) | bit) & mask;
-        self.time_step += 1;
-
-        attendance
+        // TODO: 请按照上述 3 个步骤实现少数派博弈的单步状态机
+        todo!("【关卡 8 - 任务 4】请实现少数派博弈单步状态机 step（含邻域从众判定、胜负判定与历史位运算更新）");
     }
 
     /// 连续推进多个时间步，并返回各步的净动作序列 A(t)

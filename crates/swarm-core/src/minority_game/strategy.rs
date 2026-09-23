@@ -1,5 +1,7 @@
 //! # 少数派博弈策略与智能体定义 (Strategy & Agent for Minority Game)
 
+#![allow(unused_variables, dead_code)]
+
 use rand::Rng;
 
 /// 智能体策略表：将 2^M 个历史状态映射为离散动作 a in {-1, +1}
@@ -32,14 +34,15 @@ impl Strategy {
         self.actions[history]
     }
 
-    /// 根据实际少数派获胜动作更新虚拟得分
+    /// ## 任务 1: 虚拟策略积分更新 (Virtual Scoring)
+    ///
+    /// 无论该策略本轮是否被选中执行，均对照实际少数派获胜结果更新评分：
+    /// - 若 `self.actions[history] == winning_action`，预测正确：`virtual_score += 1`；
+    /// - 否则预测错误：`virtual_score -= 1`。
     #[inline]
     pub fn update_score(&mut self, winning_action: i8, history: usize) {
-        if self.actions[history] == winning_action {
-            self.virtual_score += 1;
-        } else {
-            self.virtual_score -= 1;
-        }
+        // TODO: 请实现策略虚拟积分更新逻辑
+        todo!("【关卡 8 - 任务 1】请实现策略虚拟积分更新规则 update_score");
     }
 }
 
@@ -60,17 +63,12 @@ impl MgAgent {
         Self { strategies }
     }
 
-    /// 获取当前得分最高的策略下标
+    /// ## 任务 2: 获取当前手头虚拟得分最高的策略下标
+    ///
+    /// 遍历 `self.strategies`，寻找拥有最大 `virtual_score` 的策略下标并返回。
     pub fn best_strategy_index(&self) -> usize {
-        let mut best_idx = 0;
-        let mut max_score = self.strategies[0].virtual_score;
-        for (i, strat) in self.strategies.iter().enumerate().skip(1) {
-            if strat.virtual_score > max_score {
-                max_score = strat.virtual_score;
-                best_idx = i;
-            }
-        }
-        best_idx
+        // TODO: 寻找最佳策略下标
+        todo!("【关卡 8 - 任务 2】请实现智能体寻找最高得分策略下标 best_strategy_index");
     }
 
     /// 获取当前手头策略的最高得分
