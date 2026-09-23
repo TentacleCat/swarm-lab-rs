@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 use super::types::{vec2_length, vec2_sub, RobotNode};
 
 /// Hierarchy management for SoNS network lifecycle.
@@ -44,69 +46,40 @@ impl SoNSTreeManager {
         Self::update_subtree_scales_and_depths(robots);
     }
 
-    /// Split a child branch from parent (Section 4.1 "Splitting a SoNS").
-    /// The expelled child automatically becomes the Brain of its own multi-level SoNS,
-    /// retaining all its downstream children intact without re-initializing the subtree.
+    /// 【关卡 14 - 任务 3】断链裂变：将子树从父节点割离 (Section 4.1 "Splitting a SoNS")
+    ///
+    /// 关键机制：被割离的子节点自动成为独立多级 SoNS 的新 Brain，
+    /// 其所有下游子节点完整保留，无需重置或重新发现子树！
+    ///
+    /// # 提示
+    /// - 从 parent 的 `children_ids` 中移除 `child_id`；
+    /// - 将 child 的 `parent_id` 置为 `None`，`brain_id` 置为 `child_id`，`target_relative_offset` 置为 `None`；
+    /// - 向下游递归广播新 `brain_id`：调用 `Self::propagate_brain_id(robots, child_id, child_id)`；
+    /// - 递归重算受影响树的规模与深度：`Self::update_subtree_scales_and_depths(robots)`；
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/sons_hierarchy.rs`](../reference/sons_hierarchy.rs)。
     pub fn split_branch(robots: &mut [RobotNode], parent_id: usize, child_id: usize) {
-        // Remove child from parent
-        robots[parent_id].children_ids.retain(|&id| id != child_id);
-
-        // Child becomes independent Brain
-        robots[child_id].parent_id = None;
-        robots[child_id].brain_id = child_id;
-        robots[child_id].target_relative_offset = None;
-
-        // Propagate new brain ID through child's downstream subtree
-        Self::propagate_brain_id(robots, child_id, child_id);
-        Self::update_subtree_scales_and_depths(robots);
+        todo!("【关卡 14 - 任务 3】在 tree.rs 中实现 SoNS 断链裂变与子树保留 split_branch");
     }
 
-    /// Merge two SoNS trees when their members encounter each other (Section 4.1 "Merging SoNSs").
+    /// 【关卡 14 - 任务 3】集群相遇与破偶合并 (Section 4.1 "Merging SoNSs")
     ///
-    /// Compares the Brain quality/rank:
-    /// - Primary criterion: total scale (number of robots in SoNS)
-    /// - Secondary criterion: internal rank `id_N`
-    /// The lower-quality Brain agrees to become a child (or joins under the higher-quality tree).
+    /// 步骤包括：
+    /// 1. 距离检查：若两机器人间距大于 `self.recruitment_range` 则返回 false；
+    /// 2. 身份检查：若两机器人已属于同一个 Brain（`brain_a == brain_b`）则返回 false；
+    /// 3. Brain 质量与规模评估：
+    ///    - 主判据：总子树规模 `downstream_scale`（大群体吞并小群体）；
+    ///    - 辅助破偶判据：内部随机 Rank（`rank_a >= rank_b`）；
+    /// 4. 劣势方整树并入优势方：调用 `detach_from_parent` 与 `add_child_link`。
+    ///
+    /// # 提示
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/sons_hierarchy.rs`](../reference/sons_hierarchy.rs)。
     pub fn attempt_merge(
         &self,
         robots: &mut [RobotNode],
         robot_a_id: usize,
         robot_b_id: usize,
     ) -> bool {
-        let dist = vec2_length(vec2_sub(robots[robot_a_id].position, robots[robot_b_id].position));
-        if dist > self.recruitment_range {
-            return false;
-        }
-
-        let brain_a = robots[robot_a_id].brain_id;
-        let brain_b = robots[robot_b_id].brain_id;
-        if brain_a == brain_b {
-            return false; // already in the same SoNS
-        }
-
-        // Compare brain qualities
-        let scale_a = robots[brain_a].downstream_scale;
-        let scale_b = robots[brain_b].downstream_scale;
-        let rank_a = robots[brain_a].rank;
-        let rank_b = robots[brain_b].rank;
-
-        let a_wins = if scale_a != scale_b {
-            scale_a > scale_b
-        } else {
-            rank_a >= rank_b
-        };
-
-        if a_wins {
-            // Brain B joins under Robot A
-            Self::detach_from_parent(robots, brain_b);
-            Self::add_child_link(robots, robot_a_id, brain_b);
-        } else {
-            // Brain A joins under Robot B
-            Self::detach_from_parent(robots, brain_a);
-            Self::add_child_link(robots, robot_b_id, brain_a);
-        }
-
-        true
+        todo!("【关卡 14 - 任务 3】在 tree.rs 中实现集群规模与 Rank 破偶合并 attempt_merge");
     }
 
     /// Detach a node from its current parent if it has one.

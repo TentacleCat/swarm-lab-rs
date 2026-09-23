@@ -15,4 +15,5 @@ pub mod ring_1d;
 pub mod heterogeneous_swarms;
 pub mod turing_morphogenesis;
 pub mod morphological_swarms;
+pub mod sons_hierarchy;
 

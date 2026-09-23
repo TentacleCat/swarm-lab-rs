@@ -16,9 +16,25 @@ use rand::{Rng, SeedableRng};
 use serde::Serialize;
 use std::fs::{create_dir_all, File};
 use std::path::Path;
-use swarm_core::sons_hierarchy::{
-    vec2_add, vec2_scale, MorphologySlot, RobotNode, RobotType, SoNSSimulator,
+// ============================================================================
+// 关卡 14: SoNS 自组织神经系统分层网络 (arXiv:2401.13103 / Science Robotics 2024)
+//
+// 教学模式切换指南：
+// 1. 【默认】标准参考答案模式：直接运行体验顶级自组织神经树形成与动态置换模拟
+// 2. 【动手实战】学员练习模式：注释掉下方参考实现，取消注释学员实现
+// ============================================================================
+
+// --- 模式 1: 使用标准参考实现 (默认启用) ---
+use swarm_core::reference::sons_hierarchy::{
+    vec2_add, vec2_scale, MorphologySlotReference as MorphologySlot,
+    RobotNodeReference as RobotNode, RobotTypeReference as RobotType,
+    SoNSSimulatorReference as SoNSSimulator,
 };
+
+// --- 模式 2: 使用学员自己的实战代码 (完成 crates/swarm-core/src/sons_hierarchy/ 中的任务后启用) ---
+// use swarm_core::sons_hierarchy::{
+//     vec2_add, vec2_scale, MorphologySlot, RobotNode, RobotType, SoNSSimulator,
+// };
 
 #[derive(Debug, Serialize)]
 struct RecordRow {

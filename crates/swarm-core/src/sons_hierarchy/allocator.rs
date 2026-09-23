@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 use super::types::{vec2_add, vec2_length, vec2_rotate, vec2_sub, MorphologySlot, RobotNode, Vec2};
 
 /// Result of an allocation round executed by a parent robot.
@@ -44,136 +46,26 @@ impl SoNSAllocator {
     /// - `parent`: The parent robot executing the allocation.
     /// - `target_slots`: Child slots specified in the target morphology for this parent.
     /// - `candidates`: Pool of candidate robots (including newly seen free robots and existing children).
+    /// 【关卡 14 - 任务 1】执行局域槽位分配与自组织就近置换 (Section 4.1 Node Allocation & Dynamic Replacement)
+    ///
+    /// 步骤包括：
+    /// 1. 目标槽位世界坐标计算：根据 parent 姿态将 `relative_offset` 旋转加平移映射到全局世界坐标；
+    /// 2. 保留已分配且类型匹配的合法现有子节点；
+    /// 3. 贪心为未占用槽位指派欧氏距离最近且类型匹配的候选机器人；
+    /// 4. 自组织就近置换 (Dynamic Replacement)：
+    ///    - 遍历未分配候选者，检查其到已有槽位的距离是否比现有分配者更近至少 `self.replacement_margin`；
+    ///    - 若优势明显，则将旧 Child 降级踢回候选者池（放入 `replaced_children`），将新候选者替换入槽；
+    /// 5. 汇总生成 `AllocationResult`。
+    ///
+    /// # 提示
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/sons_hierarchy.rs`](../reference/sons_hierarchy.rs)。
     pub fn allocate_local_slots(
         &self,
         parent: &RobotNode,
         target_slots: &[MorphologySlot],
         candidates: &[RobotNode],
     ) -> AllocationResult {
-        let mut result = AllocationResult::default();
-        if target_slots.is_empty() || candidates.is_empty() {
-            result.unallocated_candidates = candidates.iter().map(|c| c.id).collect();
-            return result;
-        }
-
-        // 1. Calculate world positions for each target slot based on parent's pose
-        let slot_targets: Vec<(usize, Vec2)> = target_slots
-            .iter()
-            .map(|s| {
-                let world_offset = vec2_rotate(s.relative_offset, parent.yaw);
-                let world_pos = vec2_add(parent.position, world_offset);
-                (s.slot_id, world_pos)
-            })
-            .collect();
-
-        // Track assignment status
-        let mut assigned_slots: Vec<Option<usize>> = vec![None; slot_targets.len()];
-        let mut assigned_candidates = std::collections::HashSet::new();
-
-        // 2. First, evaluate existing children already in slots
-        for (slot_idx, (_slot_id, _slot_pos)) in slot_targets.iter().enumerate() {
-            let expected_type = target_slots[slot_idx].expected_type;
-            // Check if parent already has a child that matches this slot and robot type
-            if let Some(child_id) = parent.children_ids.get(slot_idx) {
-                if let Some(child) = candidates.iter().find(|c| c.id == *child_id) {
-                    if child.robot_type == expected_type {
-                        assigned_slots[slot_idx] = Some(child.id);
-                        assigned_candidates.insert(child.id);
-                    }
-                }
-            }
-        }
-
-        // 3. For any unassigned slot, greedily find the best unassigned candidate of matching type
-        for (slot_idx, (_slot_id, slot_pos)) in slot_targets.iter().enumerate() {
-            if assigned_slots[slot_idx].is_some() {
-                continue;
-            }
-            let expected_type = target_slots[slot_idx].expected_type;
-
-            let mut best_candidate_id = None;
-            let mut min_dist = f64::MAX;
-
-            for candidate in candidates {
-                if assigned_candidates.contains(&candidate.id) {
-                    continue;
-                }
-                if candidate.robot_type != expected_type {
-                    continue;
-                }
-                let dist = vec2_length(vec2_sub(candidate.position, *slot_pos));
-                if dist < min_dist {
-                    min_dist = dist;
-                    best_candidate_id = Some(candidate.id);
-                }
-            }
-
-            if let Some(cand_id) = best_candidate_id {
-                assigned_slots[slot_idx] = Some(cand_id);
-                assigned_candidates.insert(cand_id);
-            }
-        }
-
-        // 4. Dynamic Replacement (重点4.1: 自组织就近置换机制)
-        // Check if any remaining candidate is substantially closer to an already-assigned slot
-        // than its current occupant.
-        for candidate in candidates {
-            if assigned_candidates.contains(&candidate.id) {
-                continue;
-            }
-
-            let mut best_replacement_slot = None;
-            let mut max_improvement = 0.0;
-
-            for (slot_idx, (_slot_id, slot_pos)) in slot_targets.iter().enumerate() {
-                if let Some(current_occupant_id) = assigned_slots[slot_idx] {
-                    let expected_type = target_slots[slot_idx].expected_type;
-                    if candidate.robot_type != expected_type {
-                        continue;
-                    }
-
-                    if let Some(curr) = candidates.iter().find(|c| c.id == current_occupant_id) {
-                        let curr_dist = vec2_length(vec2_sub(curr.position, *slot_pos));
-                        let cand_dist = vec2_length(vec2_sub(candidate.position, *slot_pos));
-
-                        // If candidate is closer by at least replacement_margin
-                        if curr_dist - cand_dist > self.replacement_margin {
-                            let improvement = curr_dist - cand_dist;
-                            if improvement > max_improvement {
-                                max_improvement = improvement;
-                                best_replacement_slot = Some((slot_idx, current_occupant_id));
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Execute replacement if beneficial
-            if let Some((slot_idx, old_child_id)) = best_replacement_slot {
-                // Demote old child to candidate pool
-                result.replaced_children.push(old_child_id);
-                assigned_candidates.remove(&old_child_id);
-
-                // Assign new candidate to slot
-                assigned_slots[slot_idx] = Some(candidate.id);
-                assigned_candidates.insert(candidate.id);
-            }
-        }
-
-        // 5. Build final output
-        for (slot_idx, (slot_id, slot_pos)) in slot_targets.into_iter().enumerate() {
-            if let Some(robot_id) = assigned_slots[slot_idx] {
-                result.assignments.push((slot_id, robot_id, slot_pos));
-            }
-        }
-
-        for candidate in candidates {
-            if !assigned_candidates.contains(&candidate.id) {
-                result.unallocated_candidates.push(candidate.id);
-            }
-        }
-
-        result
+        todo!("【关卡 14 - 任务 1】在 allocator.rs 中实现自组织就近置换槽位分配 allocate_local_slots");
     }
 }
 

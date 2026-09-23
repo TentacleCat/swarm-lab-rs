@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 use super::types::{vec2_length, vec2_sub, RobotNode, Vec2};
 use serde::{Deserialize, Serialize};
 
@@ -30,38 +32,18 @@ pub fn compute_tracking_error(
     brain_id: usize,
     target_world_positions: &[Option<Vec2>],
 ) -> f64 {
-    let n = robots.len();
-    if n == 0 {
-        return 0.0;
-    }
-
-    let p1 = robots[brain_id].position;
-    // Brain target is always its own current position in relative tracking
-    let f1 = target_world_positions[brain_id].unwrap_or(p1);
-
-    let mut sum_error = 0.0;
-    let mut count = 0;
-
-    for (i, robot) in robots.iter().enumerate() {
-        if i == brain_id {
-            count += 1;
-            continue; // E_1 = 0
-        }
-
-        if let Some(fi) = target_world_positions[i] {
-            let actual_dist = vec2_length(vec2_sub(robot.position, p1));
-            let target_dist = vec2_length(vec2_sub(fi, f1));
-            let ei = (actual_dist - target_dist).abs();
-            sum_error += ei;
-            count += 1;
-        }
-    }
-
-    if count > 0 {
-        sum_error / (count as f64)
-    } else {
-        0.0
-    }
+    // 【关卡 14 - 任务 4】计算位置跟踪误差 E
+    // 提示：
+    // 1. 若 robots.len() == 0 则直接返回 0.0
+    // 2. 获取脑节点当前位置 p1 = robots[brain_id].position，脑目标位置 f1 = target_world_positions[brain_id].unwrap_or(p1)
+    // 3. 遍历 robots[i]，当 i == brain_id 时，E_1 = 0，记入有效统计 count += 1
+    // 4. 若 target_world_positions[i] 为 Some(fi)：
+    //    actual_dist = ||robot.position - p1||
+    //    target_dist = ||fi - f1||
+    //    ei = |actual_dist - target_dist|
+    //    sum_error += ei, count += 1
+    // 5. 若 count > 0 返回 sum_error / count，否则返回 0.0
+    todo!("【关卡 14 - 任务 4】在 metrics.rs 中实现跟踪误差计算 compute_tracking_error")
 }
 
 /// Compute theoretical lower bound B(t) according to Equation (2) of Section 4.2:
@@ -76,29 +58,16 @@ pub fn compute_theoretical_lower_bound(
     max_speeds: &[f64],
     elapsed_time: f64,
 ) -> f64 {
-    let n = start_positions.len();
-    if n == 0 {
-        return 0.0;
-    }
-
-    let mut sum_bound = 0.0;
-    let mut count = 0;
-
-    for i in 0..n {
-        if let Some(target) = target_positions[i] {
-            let initial_dist = vec2_length(vec2_sub(start_positions[i], target));
-            let travel_dist = max_speeds[i] * elapsed_time;
-            let bi = (initial_dist - travel_dist).max(0.0);
-            sum_bound += bi;
-            count += 1;
-        }
-    }
-
-    if count > 0 {
-        sum_bound / (count as f64)
-    } else {
-        0.0
-    }
+    // 【关卡 14 - 任务 4】计算理论跟踪误差下界 B(t)
+    // 提示：
+    // 1. 若 start_positions 为空返回 0.0
+    // 2. 遍历每个机器人 i：若 target_positions[i] 为 Some(target)：
+    //    initial_dist = ||start_positions[i] - target||
+    //    travel_dist = max_speeds[i] * elapsed_time
+    //    bi = max(0.0, initial_dist - travel_dist)
+    //    sum_bound += bi, count += 1
+    // 3. 返回 sum_bound / count
+    todo!("【关卡 14 - 任务 4】在 metrics.rs 中实现理论下界计算 compute_theoretical_lower_bound")
 }
 
 #[cfg(test)]

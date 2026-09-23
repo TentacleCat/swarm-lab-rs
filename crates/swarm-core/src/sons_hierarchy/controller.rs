@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 use super::types::{
     vec2_add, vec2_length, vec2_normalize, vec2_rotate, vec2_scale, vec2_sub, RobotNode, Vec2,
 };
@@ -57,7 +59,20 @@ impl SoNSMotionController {
         Self { params }
     }
 
-    /// Calculate target velocity for a follower robot based on parent guidance and environment.
+    /// 【关卡 14 - 任务 2】计算从属节点的质量-弹簧-阻尼运动学速度指令 (Section 4.1 Collective Actuation)
+    ///
+    /// 控制算法分步：
+    /// 1. 目标位姿计算：根据 parent 姿态将 `target_relative_offset` 旋转加平移，计算误差向量 $\vec{e} = \mathbf{p}_{\text{target}} - \mathbf{p}$ 与距离 $d = \|\vec{e}\|$；
+    /// 2. 弹簧-阻尼运动学跟踪速度 $v_{\text{track}}$：
+    ///    - $d < r_{\text{stop}}$ (死区，如 2cm): 停止速度 0.0；
+    ///    - $r_{\text{stop}} \le d < r_{\text{slow}}$ (线性减速区，如 20cm): $v_{\max} \cdot (d / r_{\text{slow}}) \cdot \hat{e}$；
+    ///    - $d \ge r_{\text{slow}}$: 全速 $v_{\max} \cdot \hat{e}$；
+    /// 3. 去中心化障碍物势场排斥速度 $v_{\text{obs}}$；
+    /// 4. 机器人个体间避碰排斥速度 $v_{\text{repel}}$；
+    /// 5. 速度限幅与安全区视距约束 ($r_{\text{safe}}$ 视距保底)：若下个时间步超出 safezone 则消除径向远离速度分量。
+    ///
+    /// # 提示
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/sons_hierarchy.rs`](../reference/sons_hierarchy.rs)。
     pub fn compute_follower_velocity(
         &self,
         robot: &RobotNode,
@@ -65,77 +80,7 @@ impl SoNSMotionController {
         obstacles: &[Vec2],
         nearby_robots: &[Vec2],
     ) -> Vec2 {
-        let target_offset = match robot.target_relative_offset {
-            Some(offset) => offset,
-            None => [0.0, 0.0],
-        };
-
-        // 1. Compute target position in world coordinates based on parent pose
-        let target_world_offset = vec2_rotate(target_offset, parent.yaw);
-        let target_pos = vec2_add(parent.position, target_world_offset);
-
-        // Tracking error
-        let err = vec2_sub(target_pos, robot.position);
-        let dist = vec2_length(err);
-
-        // 2. Mass-spring-damper kinematic tracking velocity (Section 4.1 & Driver.lua)
-        let v_track = if dist < self.params.stop_zone {
-            [0.0, 0.0]
-        } else if dist < self.params.slowdown_zone {
-            let scale = self.params.max_speed * (dist / self.params.slowdown_zone);
-            vec2_scale(vec2_normalize(err), scale)
-        } else {
-            vec2_scale(vec2_normalize(err), self.params.max_speed)
-        };
-
-        // 3. Decentralized Obstacle Repulsion (Avoider.lua)
-        let mut v_obs = [0.0, 0.0];
-        for &obs_pos in obstacles {
-            let diff = vec2_sub(robot.position, obs_pos);
-            let d = vec2_length(diff);
-            if d > 1e-4 && d < self.params.obstacle_radius {
-                let mag = self.params.obstacle_gain * (1.0 / d - 1.0 / self.params.obstacle_radius);
-                let force = vec2_scale(vec2_normalize(diff), mag);
-                v_obs = vec2_add(v_obs, force);
-            }
-        }
-
-        // 4. Inter-robot collision avoidance (Spreader.lua)
-        let mut v_repel = [0.0, 0.0];
-        for &other_pos in nearby_robots {
-            let diff = vec2_sub(robot.position, other_pos);
-            let d = vec2_length(diff);
-            if d > 1e-4 && d < self.params.inter_robot_avoid_radius {
-                let mag = self.params.inter_robot_avoid_gain * (self.params.inter_robot_avoid_radius - d);
-                let force = vec2_scale(vec2_normalize(diff), mag);
-                v_repel = vec2_add(v_repel, force);
-            }
-        }
-
-        // Combined velocity
-        let mut v_cmd = vec2_add(vec2_add(v_track, v_obs), v_repel);
-
-        // Clamp speed
-        let speed = vec2_length(v_cmd);
-        if speed > self.params.max_speed {
-            v_cmd = vec2_scale(vec2_normalize(v_cmd), self.params.max_speed);
-        }
-
-        // 5. Safezone containment check (Driver.lua lines 130-150)
-        // If commanded velocity would move robot beyond safezone from parent, dampen or stop it
-        let next_pos = vec2_add(robot.position, vec2_scale(v_cmd, 0.1));
-        let dist_to_parent_next = vec2_length(vec2_sub(next_pos, parent.position));
-        if dist_to_parent_next > self.params.safezone_radius {
-            // Project velocity so it does not increase distance to parent
-            let parent_dir = vec2_normalize(vec2_sub(parent.position, robot.position));
-            let v_radial = v_cmd[0] * parent_dir[0] + v_cmd[1] * parent_dir[1];
-            if v_radial < 0.0 {
-                // Moving away from parent, cancel outward component
-                v_cmd = [v_cmd[0] - v_radial * parent_dir[0], v_cmd[1] - v_radial * parent_dir[1]];
-            }
-        }
-
-        v_cmd
+        todo!("【关卡 14 - 任务 2】在 controller.rs 中实现质量-弹簧-阻尼运动学速度计算 compute_follower_velocity");
     }
 }
 

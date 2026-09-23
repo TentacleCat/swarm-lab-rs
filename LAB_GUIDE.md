@@ -19,7 +19,10 @@ crates/swarm-core/src/
 │   ├── minority_game.rs
 │   ├── ant_foraging.rs
 │   ├── swarm_robotics.rs
-│   └── heterogeneous_swarms.rs
+│   ├── turing_morphogenesis.rs
+│   ├── heterogeneous_swarms.rs
+│   ├── morphological_swarms.rs
+│   └── sons_hierarchy.rs
 │
 ├── metrics.rs        # 🎯 [实战关卡 1] 切片借用与序参量计算 (从这里开始！)
 ├── integrator.rs     # 🎯 [实战关卡 2] 可变借用、内存复用与 RK4 积分器
@@ -473,6 +476,7 @@ crates/swarm-core/src/
 
 ### 🎯 关卡 14: 自组织神经系统 (SoNS) 动态多层级控制与就近置换
 - **代码文件**:
+  - 参考实现: [`crates/swarm-core/src/reference/sons_hierarchy.rs`](crates/swarm-core/src/reference/sons_hierarchy.rs)
   - 核心类型定义: [`crates/swarm-core/src/sons_hierarchy/types.rs`](crates/swarm-core/src/sons_hierarchy/types.rs)
   - 节点分配与就近置换 (Section 4.1): [`crates/swarm-core/src/sons_hierarchy/allocator.rs`](crates/swarm-core/src/sons_hierarchy/allocator.rs)
   - 质量-弹簧-阻尼运动学控制: [`crates/swarm-core/src/sons_hierarchy/controller.rs`](crates/swarm-core/src/sons_hierarchy/controller.rs)
@@ -493,10 +497,29 @@ crates/swarm-core/src/
   5. **构型收敛评估指标 (Section 4.2)**:
      - 公式 (1) 平均欧氏跟踪误差 $E(t) = \frac{1}{n} \sum |d(\mathbf{p}_i - \mathbf{p}_1) - d(\mathbf{f}_i - \mathbf{f}_1)|$；
      - 公式 (2) 物理极限直线速度理论下界 $B(t) = \frac{1}{n} \sum \max(0, d_0 - \kappa_i t)$。
+- **任务目标**:
+  - **任务 1**: 局部槽位自组织匹配与就近置换 (`allocate_local_slots` in `allocator.rs`)
+    - 遍历子级槽位，筛选未被父节点占用的候选机器人并核验机器人类型匹配；
+    - 对已占用槽位计算当前子节点与候选者到槽位的欧氏距离，当候选者更优时触发**动态置换 (Dynamic Replacement)**，将原子节点降级并移入未分配候选池，加速全局几何构型收敛。
+  - **任务 2**: 质量-弹簧-阻尼运动学跟随控制 (`compute_follower_velocity` in `controller.rs`)
+    - 相对目标偏移变换 $p_{\text{target}} = p_{\text{parent}} + R(\theta_{\text{parent}}) \cdot \text{offset}$；
+    - 质量-弹簧-阻尼三阶段速度调制：死区停止 ($r \le r_{\text{stop}}$)、线性减速 ($r \le r_{\text{slow}}$)、线性加速并限幅于最大航速 $\kappa_i$；
+    - 视距安全区约束：当偏离父节点超过 $r_{\text{safe}}$ 时以最大速度径向回缩。
+  - **任务 3**: 拓扑生命周期维护：子树动态裂变与主从规模合并 (`split_branch`, `attempt_merge` in `tree.rs`)
+    - 断链时将割离节点自立为新 Brain，**完整保留下游子树**并更新所有子树节点的 `brain_id`；
+    - 两群相遇时按子树规模破偶（子树节点总数大者优先，若相等则节点 ID 小者优先），优势 Brain 吸纳劣势群为下游子树。
+  - **任务 4**: 跟踪误差与理论收敛下界计算 (`compute_tracking_error`, `compute_theoretical_lower_bound` in `metrics.rs`)
+    - 相对跟踪误差：$E(t) = \frac{1}{n} \sum_{i=1}^n | \|\mathbf{p}_i - \mathbf{p}_1\| - \|\mathbf{f}_i - \mathbf{f}_1\| |$（脑节点 $E_1 = 0$）；
+    - 物理直线速度理论下界：$B(t) = \frac{1}{n} \sum_{i=1}^n \max(0, \|\mathbf{p}_{0, i} - \mathbf{f}_i\| - \kappa_i t)$。
 - **验证命令**:
-  ```bash
-  cargo test -p swarm-core -- sons_hierarchy
-  ```
+  - 验证参考实现：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- reference::sons_hierarchy
+    ```
+  - 练习区通关测试：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- sons_hierarchy
+    ```
 - **运行实验与出图**:
   ```bash
   cargo run --example 19_arxiv2401_sons_self_organizing_hierarchy
