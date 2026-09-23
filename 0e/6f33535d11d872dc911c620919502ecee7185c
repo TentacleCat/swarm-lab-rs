@@ -1,0 +1,19 @@
+crates/swarm-core/src/naming_game/model.rs
+  s_b57ac9497af8e3::t_8fa5a75e11b36c 94-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0e6f33535d11d872dc911c620919502ecee7185c",
+  "prompts": {},
+  "sessions": {
+    "s_b57ac9497af8e3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0cc16-eb00-7710-aef0-cbe41e48cbe2",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
