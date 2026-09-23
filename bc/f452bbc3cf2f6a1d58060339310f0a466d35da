@@ -1,0 +1,14 @@
+crates/swarm-core/src/naming_game/llm_model.rs
+  h_c76f4ec917e583 77-96,139-140,197-231
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bcf452bbc3cf2f6a1d58060339310f0a466d35da",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
