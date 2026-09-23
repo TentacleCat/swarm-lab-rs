@@ -25,7 +25,17 @@ use std::fs::{self, File};
 use std::io::{BufWriter, Write};
 use std::process::Command;
 use std::time::Instant;
-use swarm_core::morphological_swarms::{MorphologicalSwarm, SwarmParams};
+// =========================================================================
+// 💡 [闯关模式开关]
+// 默认使用参考实现 (Reference)，保证开箱即用并可作为对照。
+// 当你在 crates/swarm-core/src/morphological_swarms/ 中亲手编写完成练习任务后，
+// 注释掉下面这行，取消注释下一行，即可切换为你自己的实战代码检验成果！
+// =========================================================================
+use swarm_core::reference::morphological_swarms::{
+    MorphologicalSwarmReference as MorphologicalSwarm,
+    SwarmParamsReference as SwarmParams,
+};
+// use swarm_core::morphological_swarms::{MorphologicalSwarm, SwarmParams};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🤖 =================================================================");

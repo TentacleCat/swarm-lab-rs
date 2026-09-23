@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 //! # Morphological Swarm Metrics (arXiv:2601.07610)
 //!
 //! 论文核心宏观与微观序参量计算：
@@ -24,30 +26,23 @@ pub struct SwarmMetrics {
 }
 
 impl MorphologicalSwarm {
-    /// 计算当前光照区机器人数量占比 $N_\circ / N$
+    /// 【关卡 13 - 任务 4】计算当前光照区机器人数量占比 $N_\circ / N$
+    ///
+    /// # 提示
+    /// - 若粒子列表为空，直接返回 0.0；
+    /// - 统计 `p.in_light == true` 的粒子数除以总粒子数；
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/morphological_swarms.rs`](../reference/morphological_swarms.rs)。
     pub fn light_occupancy_ratio(&self) -> f64 {
-        if self.particles.is_empty() {
-            return 0.0;
-        }
-        let in_count = self.particles.iter().filter(|p| p.in_light).count();
-        in_count as f64 / self.particles.len() as f64
+        todo!("【关卡 13 - 任务 4】在 metrics.rs 中实现光照聚集比例计算 light_occupancy_ratio");
     }
 
-    /// 计算宏观极化对齐序参量 $\langle \Psi \rangle = \frac{1}{N} |\sum_{i=1}^N \vec{n}_i|$
+    /// 【关卡 13 - 任务 4】计算宏观极化对齐序参量 $\langle \Psi \rangle = \frac{1}{N} |\sum_{i=1}^N \vec{n}_i|$
+    ///
+    /// # 提示
+    /// - 累加所有粒子的朝向向量分量 `sum_x += p.mu[0], sum_y += p.mu[1]`；
+    /// - 取向量模长除以粒子总数 N：`sqrt(sum_x^2 + sum_y^2) / N`。
     pub fn polar_alignment(&self) -> f64 {
-        let n = self.particles.len();
-        if n == 0 {
-            return 0.0;
-        }
-
-        let mut sum_x = 0.0;
-        let mut sum_y = 0.0;
-        for p in &self.particles {
-            sum_x += p.mu[0];
-            sum_y += p.mu[1];
-        }
-
-        (sum_x * sum_x + sum_y * sum_y).sqrt() / (n as f64)
+        todo!("【关卡 13 - 任务 4】在 metrics.rs 中实现宏观极化对齐序参量计算 polar_alignment");
     }
 
     /// 计算所有粒子的平均瞬时运动速率

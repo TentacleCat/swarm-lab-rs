@@ -14,4 +14,5 @@ pub mod swarm_robotics;
 pub mod ring_1d;
 pub mod heterogeneous_swarms;
 pub mod turing_morphogenesis;
+pub mod morphological_swarms;
 

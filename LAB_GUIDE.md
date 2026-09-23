@@ -439,10 +439,29 @@ crates/swarm-core/src/
      - 弱逆对齐 ($\kappa > -0.6$)：成核不足以抗衡噪声，聚集率接近随机游走基线 0.18；
      - 强逆对齐 ($\kappa < -2.2$)：在全场（包括暗区）发生碰撞冷冻死锁，导致反向趋光；
      - 最佳甜点区 ($\kappa \in [-2.0, -0.6]$)：碰撞减速与光照区慢行形成正反馈，通过动力学诱导相分离（MIPS）在光照区涌现出高达 40% 的自发聚集。
+- **任务目标**:
+  - **任务 1**: 二维最小镜像位移与周期性坐标折叠 (`minimum_image_displacement`, `wrap_coordinate` in `model.rs`)
+    - 盒子区间 $[-L, L]$（边长 $2L$）下的最短镜像位移 $(dx, dy)$ 与周期性坐标折叠映射。
+  - **任务 2**: WCA 软排斥碰撞力场计算 (`compute_wca_forces` in `model.rs`)
+    - 截断半径 $r_c = 2^{1/6}\sigma$，软排斥标量力系数：
+      $$f_{\text{coeff}} = \frac{48\epsilon}{r^2} \left[ \left(\frac{\sigma}{r}\right)^{12} - 0.5 \left(\frac{\sigma}{r}\right)^6 \right]$$
+      $$\vec{F}_{ij} = -f_{\text{coeff}} \cdot (\vec{r}_j - \vec{r}_i), \quad \vec{F}_{ji} = -\vec{F}_{ij}$$
+  - **任务 3**: 动量弛豫与非对称形态自对齐力矩数值积分 (`step` in `model.rs`)
+    - 动量弛豫速度推进：$\vec{v} \leftarrow \vec{v} + dt \cdot \frac{v_a \vec{\mu} - \vec{v} + \vec{f}}{\tau_v}$；
+    - 非对称形态力矩转向（向量三重积展开）：
+      $$\dot{\mu}_x = \kappa (\mu_y^2 v_x - \mu_x \mu_y v_y), \quad \dot{\mu}_y = \kappa (\mu_x^2 v_y - \mu_x \mu_y v_x)$$
+    - 高斯旋转扩散噪声叠加与单位方向向量归一化。
+  - **任务 4**: 光照聚集率与宏观极化对齐度计算 (`light_occupancy_ratio`, `polar_alignment` in `metrics.rs`)
+    - 光照区占比 $N_\circ / N$ 与宏观极化度 $\langle \Psi \rangle = \frac{1}{N} \| \sum \vec{\mu}_i \|$。
 - **验证命令**:
-  ```bash
-  cargo test -p swarm-core -- morphological_swarms
-  ```
+  - 验证参考实现：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- reference::morphological_swarms
+    ```
+  - 练习区通关测试：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- morphological_swarms
+    ```
 - **运行实验与出图**:
   ```bash
   cargo run --release --example 18_arxiv2026_morphological_aggregating_swarms
