@@ -1,4 +1,6 @@
-//! # 储备池神经网络控制器与基因型 (Reservoir Neural Network & Genotype)
+#![allow(unused_variables, dead_code, unused_imports)]
+
+//! # 储备池神经网络与基因型系统 (Reservoir Controller & Genotype)
 //!
 //! 论文: *Emergence of Specialised Collective Behaviors in Evolving Heterogeneous Swarms* (PPSN 2024 / Springer)
 //!
@@ -45,30 +47,19 @@ impl Reservoir {
         Self { w_h1, w_h2 }
     }
 
-    /// 前向传播通过储备池隐藏层，计算隐藏激活特征 h2 \in R^9
+    /// 【关卡 12 - 任务 3】前向传播通过储备池隐藏层，计算隐藏激活特征 h2 \in R^9
+    ///
+    /// 公式:
+    /// - h1 = ReLU(W_h1 * input)
+    /// - h2 = ReLU(W_h2 * h1)
+    ///
+    /// # 提示
+    /// - 隐藏层维度均为 9；
+    /// - ReLU(x) = x.max(0.0)；
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/heterogeneous_swarms.rs`](../reference/heterogeneous_swarms.rs)。
     #[inline]
     pub fn forward_hidden(&self, input: &[f64; 9]) -> [f64; 9] {
-        // 第一隐层: h1 = ReLU(W_h1 * input)
-        let mut h1 = [0.0; 9];
-        for i in 0..9 {
-            let mut sum = 0.0;
-            for j in 0..9 {
-                sum += self.w_h1[i][j] * input[j];
-            }
-            h1[i] = sum.max(0.0); // ReLU
-        }
-
-        // 第二隐层: h2 = ReLU(W_h2 * h1)
-        let mut h2 = [0.0; 9];
-        for i in 0..9 {
-            let mut sum = 0.0;
-            for j in 0..9 {
-                sum += self.w_h2[i][j] * h1[j];
-            }
-            h2[i] = sum.max(0.0); // ReLU
-        }
-
-        h2
+        todo!("【关卡 12 - 任务 3】在 controller.rs 中实现储备池隐藏层前向推理 forward_hidden");
     }
 }
 
@@ -102,23 +93,16 @@ impl ReservoirNN {
         }
     }
 
-    /// 执行前向推理，输出 [v, w] \in [-1.0, 1.0]^2
+    /// 【关卡 12 - 任务 3】执行前向推理，输出 [v, w] \in [-1.0, 1.0]^2
     ///
     /// 公式: RNN = tanh( W_out * ReLU( W_h2 * ReLU( W_h1 * s_in ) ) )
+    ///
+    /// # 提示
+    /// - 先调用 `self.reservoir.forward_hidden(input)` 计算隐藏层激活特征 h2；
+    /// - 再计算输出层线性组合并取双曲正切激活：`out[i] = (W_out[i] · h2).tanh()`。
     #[inline]
     pub fn forward(&self, input: &[f64; 9]) -> [f64; 2] {
-        let h2 = self.reservoir.forward_hidden(input);
-
-        let mut out = [0.0; 2];
-        for i in 0..2 {
-            let mut sum = 0.0;
-            for j in 0..9 {
-                sum += self.w_out[i][j] * h2[j];
-            }
-            out[i] = sum.tanh();
-        }
-
-        out
+        todo!("【关卡 12 - 任务 3】在 controller.rs 中实现输出层前向推理 forward");
     }
 }
 

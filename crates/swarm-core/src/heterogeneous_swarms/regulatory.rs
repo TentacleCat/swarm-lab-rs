@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 //! # 在线自适应调控机制 (Online Regulatory Mechanism / Phenotypic Plasticity)
 //!
 //! 论文: *Emergence of Specialised Collective Behaviors in Evolving Heterogeneous Swarms* (PPSN 2024 / Springer)
@@ -38,16 +40,18 @@ impl Default for RegulatoryConfig {
     }
 }
 
-/// 计算在当前局域光强值下切换/表达为 Green (子群 1) 的概率
+/// 【关卡 12 - 任务 2】计算在当前局域光强值下切换/表达为 Green (子群 1) 的概率
+///
+/// 论文方程:
+/// - if light > config.high_threshold (229.0) -> 1.00
+/// - else if light > config.low_threshold (76.0) -> 0.75
+/// - else -> 0.50
+///
+/// # 提示
+/// - 若卡壳可参考 [`crates/swarm-core/src/reference/heterogeneous_swarms.rs`](../reference/heterogeneous_swarms.rs)。
 #[inline]
 pub fn prob_green(light: f64, config: &RegulatoryConfig) -> f64 {
-    if light > config.high_threshold {
-        1.00
-    } else if light > config.low_threshold {
-        0.75
-    } else {
-        0.50
-    }
+    todo!("【关卡 12 - 任务 2】在 regulatory.rs 中实现表型可塑性概率切换 prob_green");
 }
 
 /// 执行一次全群体的在线自适应表型调控抽样

@@ -25,10 +25,25 @@ use std::io::{BufWriter, Write};
 use std::process::Command;
 use std::time::Instant;
 
-use swarm_core::heterogeneous_swarms::{
-    ArenaType, CmaEsConfig, CmaEsOptimizer, HeterogeneousGenotype, Reservoir,
-    SwarmSimConfig, SwarmSimulator,
+// =========================================================================
+// 💡 [闯关模式开关]
+// 默认使用参考实现 (Reference)，保证开箱即用并可作为对照。
+// 当你在 crates/swarm-core/src/heterogeneous_swarms/ 中亲手编写完成练习任务后，
+// 注释掉下面这行，取消注释下一行，即可切换为你自己的实战代码检验成果！
+// =========================================================================
+use swarm_core::reference::heterogeneous_swarms::{
+    ArenaTypeReference as ArenaType,
+    CmaEsConfigReference as CmaEsConfig,
+    CmaEsOptimizerReference as CmaEsOptimizer,
+    HeterogeneousGenotypeReference as HeterogeneousGenotype,
+    ReservoirReference as Reservoir,
+    SwarmSimConfigReference as SwarmSimConfig,
+    SwarmSimulatorReference as SwarmSimulator,
 };
+// use swarm_core::heterogeneous_swarms::{
+//     ArenaType, CmaEsConfig, CmaEsOptimizer, HeterogeneousGenotype, Reservoir,
+//     SwarmSimConfig, SwarmSimulator,
+// };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🤖 ======================================================================");

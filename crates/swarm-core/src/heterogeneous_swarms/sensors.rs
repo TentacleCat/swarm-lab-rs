@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports, unused_mut)]
+
 //! # 传感器系统 (Limited Sensing System)
 //!
 //! 论文: *Emergence of Specialised Collective Behaviors in Evolving Heterogeneous Swarms* (PPSN 2024 / Springer)
@@ -42,38 +44,29 @@ impl Default for SensorConfig {
     }
 }
 
-/// 将角度严格折叠至 [-PI, PI)
+/// 【关卡 12 - 任务 1】将角度严格折叠至 [-PI, PI)
+///
+/// # 提示
+/// - 当 `angle >= PI` 时，循环 `angle -= 2.0 * PI`；
+/// - 当 `angle < -PI` 时，循环 `angle += 2.0 * PI`；
+/// - 若卡壳可参考 [`crates/swarm-core/src/reference/heterogeneous_swarms.rs`](../reference/heterogeneous_swarms.rs)。
 #[inline]
 pub fn wrap_to_pi(mut angle: f64) -> f64 {
-    while angle >= PI {
-        angle -= 2.0 * PI;
-    }
-    while angle < -PI {
-        angle += 2.0 * PI;
-    }
-    angle
+    todo!("【关卡 12 - 任务 1】在 sensors.rs 中实现角度折叠 wrap_to_pi");
 }
 
-/// 将方位相对角分类至 4 象限之一:
+/// 【关卡 12 - 任务 1】将方位相对角分类至 4 象限之一:
 /// - Front (0): [-PI/4, +PI/4]
 /// - Right (1): [+PI/4, +3*PI/4]
 /// - Back  (2): [+3*PI/4, +PI] ∪ [-PI, -3*PI/4]
 /// - Left  (3): [-3*PI/4, -PI/4]
+///
+/// # 提示
+/// - 先调用 `wrap_to_pi(bearing)` 归一化输入角；
+/// - 按四象限界限判断并返回对应 `Quadrant` 枚举值。
 #[inline]
 pub fn bearing_to_quadrant(bearing: f64) -> Quadrant {
-    let b = wrap_to_pi(bearing);
-    let pi_4 = PI / 4.0;
-    let pi_3_4 = 3.0 * PI / 4.0;
-
-    if b >= -pi_4 && b < pi_4 {
-        Quadrant::Front
-    } else if b >= pi_4 && b < pi_3_4 {
-        Quadrant::Right
-    } else if b >= -pi_3_4 && b < -pi_4 {
-        Quadrant::Left
-    } else {
-        Quadrant::Back
-    }
+    todo!("【关卡 12 - 任务 1】在 sensors.rs 中实现 4 象限方位分类 bearing_to_quadrant");
 }
 
 /// 计算单台机器人针对整个群体的 9 维归一化传感器感知向量

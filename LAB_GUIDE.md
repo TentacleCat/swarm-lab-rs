@@ -392,10 +392,27 @@ crates/swarm-core/src/
   4. **去中心化在线表型可塑性调控 (Table 4 复现)**:
      - 依据局域标量光强以概率 $P_{\text{green}}(\text{light})$ 每 5.0s 动态重抽样表达控制器；
      - 在群体可扩展性（$N = 10, 20, 50$）与跨环境鲁棒性（Center, Bi-modal, Linear, Banana）中全面超越同质基准。
+- **任务目标**:
+  - **任务 1**: 4 象限受限感知与角度严格折叠 (`wrap_to_pi`, `bearing_to_quadrant` in `sensors.rs`)
+    - 角度折叠至 $[-\pi, \pi)$；
+    - 方位角分类至 Front ($[-\frac{\pi}{4}, \frac{\pi}{4})$)、Right ($[\frac{\pi}{4}, \frac{3\pi}{4})$)、Left ($[-\frac{3\pi}{4}, -\frac{\pi}{4})$)、Back (其他)。
+  - **任务 2**: 表型可塑性去中心化切换概率 (`prob_green` in `regulatory.rs`)
+    - 局域光强三段分段阶梯：
+      $$P_{\text{green}}(\text{light}) = \begin{cases} 1.00 & \text{if } \text{light} > 229.0 \\ 0.75 & \text{if } 76.0 < \text{light} \le 229.0 \\ 0.50 & \text{if } \text{light} \le 76.0 \end{cases}$$
+  - **任务 3**: 储备池隐藏层与输出层神经网络前向推理 (`forward_hidden`, `forward` in `controller.rs`)
+    - $\mathbf{h}_1 = \text{ReLU}(W_{h1} \cdot \mathbf{s}_{\text{in}}), \quad \mathbf{h}_2 = \text{ReLU}(W_{h2} \cdot \mathbf{h}_1)$
+    - $[v, w] = \tanh(W_{\text{out}} \cdot \mathbf{h}_2)$
+  - **任务 4**: 群体运动对齐序参量计算 (`compute_swarm_order` in `metrics.rs`)
+    - $\varphi_i = \frac{\| \sum_{j \in \mathcal{N}_i \cup \{i\}} e^{\sqrt{-1} \theta_j} \|}{|\mathcal{N}_i| + 1}, \quad \Phi = \frac{1}{N} \sum_{i=1}^N \varphi_i$
 - **验证命令**:
-  ```bash
-  cargo test -p swarm-core -- heterogeneous_swarms
-  ```
+  - 验证参考实现：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- reference::heterogeneous_swarms
+    ```
+  - 练习区通关测试：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- heterogeneous_swarms
+    ```
 - **运行实验与出图**:
   ```bash
   cargo run --release --example 17_springer2024_heterogeneous_swarms

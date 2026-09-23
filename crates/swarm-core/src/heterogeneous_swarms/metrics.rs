@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 //! # 统计与序参量计算模块 (Metrics & Order Parameters)
 //!
 //! 论文: *Emergence of Specialised Collective Behaviors in Evolving Heterogeneous Swarms* (PPSN 2024 / Springer)
@@ -51,45 +53,20 @@ pub fn compute_mean_intensity(intensities: &[f64]) -> f64 {
     intensities.iter().sum::<f64>() / (intensities.len() as f64)
 }
 
-/// 计算群体对齐序参量 \Phi (公式 2)
+/// 【关卡 12 - 任务 4】计算群体运动对齐序参量 \Phi (公式 2)
 ///
 /// \varphi_n = \| \sum_{p \in \mathcal{N}_n} e^{j \theta_p} + e^{j \theta_n} \| / (P_n + 1)
 /// \Phi = (1 / N) \sum_{n=1}^N \varphi_n
+///
+/// # 提示
+/// - 若机器人列表为空，直接返回 0.0；
+/// - 对每个机器人 i，初值包含自身的航向向量：`cos_sum = cos(theta_i), sin_sum = sin(theta_i), count = 1`；
+/// - 遍历所有其他机器人 j，若距离平方 $\le r_{range}^2$，则累加其航向向量分量并自增 count；
+/// - 计算局部向量模长除以 count：`phi_i = sqrt(cos_sum^2 + sin_sum^2) / count`；
+/// - 返回全群体平均值 `total_phi / N`；
+/// - 若卡壳可参考 [`crates/swarm-core/src/reference/heterogeneous_swarms.rs`](../reference/heterogeneous_swarms.rs)。
 pub fn compute_swarm_order(robots: &[Robot], perception_range: f64) -> f64 {
-    let n = robots.len();
-    if n == 0 {
-        return 0.0;
-    }
-
-    let mut total_phi = 0.0;
-    let r_sq = perception_range * perception_range;
-
-    for i in 0..n {
-        let mut cos_sum = robots[i].heading.cos();
-        let mut sin_sum = robots[i].heading.sin();
-        let mut count = 1;
-
-        let pos_i = robots[i].position;
-
-        for j in 0..n {
-            if i == j {
-                continue;
-            }
-            let dx = robots[j].position[0] - pos_i[0];
-            let dy = robots[j].position[1] - pos_i[1];
-            if dx * dx + dy * dy <= r_sq {
-                cos_sum += robots[j].heading.cos();
-                sin_sum += robots[j].heading.sin();
-                count += 1;
-            }
-        }
-
-        let mag = (cos_sum * cos_sum + sin_sum * sin_sum).sqrt();
-        let phi_i = mag / (count as f64);
-        total_phi += phi_i;
-    }
-
-    total_phi / (n as f64)
+    todo!("【关卡 12 - 任务 4】在 metrics.rs 中实现群体运动对齐序参量 compute_swarm_order");
 }
 
 /// 计算特定子群内部的对齐序参量
