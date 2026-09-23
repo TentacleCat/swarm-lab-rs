@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 //! 局域自适应边缘检测器 (Local Edge Detector)
 //!
 //! 依据 Science Robotics 2018 原理：
@@ -48,26 +50,18 @@ impl EdgeDetector {
         self.running_avg_nns = Self::compute_weighted_nns(neighbors_info);
     }
 
-    /// 计算邻居的距离反比加权邻居均值
+    /// 【关卡 11 - 任务 2】计算邻居的距离反比加权邻居均值
     ///
-    /// w_i = 1 / dist_i
+    /// 依据 Science Robotics 2018 原文局域拓扑感知原理：
+    /// w_i = 1.0 / dist_i.max(1.0)
     /// avg_NNs = sum(w_i * N_i) / sum(w_i)
+    ///
+    /// # 提示
+    /// - 若 `neighbors_info` 为空，直接返回 0.0；
+    /// - 遍历 `&(dist, n_neighbors)` 计算加权分子与权重和；
+    /// - 若权重和 > 1e-6 则返回 `sum / w_sum`，否则返回 0.0。
     pub fn compute_weighted_nns(neighbors_info: &[(f64, usize)]) -> f64 {
-        if neighbors_info.is_empty() {
-            return 0.0;
-        }
-        let mut sum = 0.0;
-        let mut w_sum = 0.0;
-        for &(dist, n_neighbors) in neighbors_info {
-            let w = 1.0 / dist.max(1.0);
-            sum += w * (n_neighbors as f64);
-            w_sum += w;
-        }
-        if w_sum > 1e-6 {
-            sum / w_sum
-        } else {
-            0.0
-        }
+        todo!("【关卡 11 - 任务 2】在 edge_detector.rs 中实现距离反比加权邻居均值 compute_weighted_nns");
     }
 
     /// 单步观测更新滑动均值
@@ -79,14 +73,15 @@ impl EdgeDetector {
         self.running_avg_nns = self.alpha * current_nns + (1.0 - self.alpha) * self.running_avg_nns;
     }
 
-    /// 判定是否处于集群边缘 (Edge)
+    /// 【关卡 11 - 任务 2】判定是否处于集群边缘 (Edge)
     ///
-    /// 当 running_avg_Ns / running_avg_NNs < edge_th 时判定为边缘
+    /// 当 running_avg_Ns / running_avg_NNs < edge_th 时判定为边缘。
+    ///
+    /// # 提示
+    /// - 若 `self.running_avg_nns < 1e-3`（孤立或极端稀疏），直接返回 `true`；
+    /// - 否则比较 `(self.running_avg_ns / self.running_avg_nns) < self.edge_th`。
     pub fn is_edge(&self) -> bool {
-        if self.running_avg_nns < 1e-3 {
-            return true;
-        }
-        (self.running_avg_ns / self.running_avg_nns) < self.edge_th
+        todo!("【关卡 11 - 任务 2】在 edge_detector.rs 中实现边缘判定 is_edge");
     }
 
     /// 获取当前边缘比率

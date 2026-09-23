@@ -13,7 +13,18 @@ use rand::SeedableRng;
 use std::fs::{create_dir_all, File};
 use std::io::Write;
 use std::time::Instant;
-use swarm_core::turing_morphogenesis::{BotState, MorphogenesisSwarm, MorphogenParams};
+// =========================================================================
+// 💡 [闯关模式开关]
+// 默认使用参考实现 (Reference)，保证开箱即用并可作为对照。
+// 当你在 crates/swarm-core/src/turing_morphogenesis/ 中亲手编写完成练习任务后，
+// 注释掉下面这行，取消注释下一行，即可切换为你自己的实战代码检验成果！
+// =========================================================================
+use swarm_core::reference::turing_morphogenesis::{
+    BotStateReference as BotState,
+    MorphogenesisSwarmReference as MorphogenesisSwarm,
+    MorphogenParamsReference as MorphogenParams,
+};
+// use swarm_core::turing_morphogenesis::{BotState, MorphogenesisSwarm, MorphogenParams};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("======================================================================");

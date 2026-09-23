@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 //! 实体 Kilobot 机器人个体与形态发生行为状态机 (Kilobot Agent & State Machine)
 //!
 //! 实现 Science Robotics 2018 原文中的三种行为状态：
@@ -83,102 +85,29 @@ impl Kilobot {
         self.morphogen.is_polarized(polar_th)
     }
 
-    /// 评估并执行状态机转移 (完全依据原版 C 代码 edge_flow 逻辑)
+    /// 【关卡 11 - 任务 3】评估并执行状态机转移 (完全依据原版 C 代码 edge_flow 逻辑)
+    ///
+    /// 依据 Science Robotics 2018 原文的三态转移图：
+    /// 1. 状态 `Wait`:
+    ///    - 若处于边缘 (`is_edge`)，所有邻居均处于 `Wait` 态，非极化（或极化但远离其他极化中心），
+    ///      且等待计数为 0、邻居不为空：转移至 `BotState::Orbit`，设置 `self.orbit_dir = 1.0`；
+    ///    - 否则若处于边缘，最近邻居为 `Wait` 态且距离过大（`min_all_dist > dist_crit + 15.0`）：
+    ///      转移至 `BotState::Follow` 避免掉队；
+    ///    - 维护 `wait_counter`：若有邻居正在移动则重置为 10，否则逐步递减至 0。
+    /// 2. 状态 `Orbit`:
+    ///    - 当脱离边缘、到达极化斑点（`min_polar_dist <= dist_crit && count_polarized >= 2`）、
+    ///      最近邻居正在移动、或间距过大脱团（`min_all_dist > dist_crit + 25.0`）：转移回 `BotState::Wait`。
+    /// 3. 状态 `Follow`:
+    ///    - 当已靠近邻居（`min_all_dist <= dist_crit`）或最近邻居不再是 `Wait`：转移回 `BotState::Wait`。
+    ///
+    /// # 提示
+    /// - 若卡壳可查阅参考实现 [`crates/swarm-core/src/reference/turing_morphogenesis.rs`](../reference/turing_morphogenesis.rs)。
     pub fn evaluate_state_transitions(
         &mut self,
         neighbors: &[NeighborObservation],
         dist_crit: f64,
         polar_th: f64,
     ) {
-        let is_edge = self.edge_detector.is_edge();
-        let my_polarized = self.is_polarized(polar_th);
-
-        // 统计极化邻居信息
-        let mut count_polarized = 0;
-        let mut min_polar_dist = f64::MAX;
-        let mut min_all_dist = f64::MAX;
-        let mut nearest_neighbor_state = BotState::Wait;
-
-        for nb in neighbors {
-            if nb.dist < min_all_dist {
-                min_all_dist = nb.dist;
-                nearest_neighbor_state = nb.state;
-            }
-            if nb.morphogen.is_polarized(polar_th) {
-                count_polarized += 1;
-                if nb.dist < min_polar_dist {
-                    min_polar_dist = nb.dist;
-                }
-            }
-        }
-
-        let all_neighbors_wait = neighbors.iter().all(|nb| nb.state == BotState::Wait);
-
-        match self.state {
-            BotState::Wait => {
-                // 1. 判断是否进入 ORBIT
-                // 条件：在边缘、所有邻居 WAIT、非极化(或虽极化但远离其他斑点)、计数归零、有邻居
-                let can_orbit = is_edge
-                    && all_neighbors_wait
-                    && (!my_polarized
-                        || count_polarized == 0
-                        || (count_polarized >= 1 && min_polar_dist > dist_crit))
-                    && (min_polar_dist > dist_crit || count_polarized < 2)
-                    && self.wait_counter == 0
-                    && !neighbors.is_empty();
-
-                if can_orbit {
-                    self.state = BotState::Orbit;
-                    self.orbit_dir = 1.0; // 默认顺时针
-                    return;
-                }
-
-                // 2. 判断是否进入 FOLLOW
-                // 条件：在边缘、最近邻居处于 WAIT 且间距超过 dist_crit + 15
-                let can_follow = is_edge
-                    && nearest_neighbor_state == BotState::Wait
-                    && min_all_dist > (dist_crit + 15.0)
-                    && !neighbors.is_empty();
-
-                if can_follow {
-                    self.state = BotState::Follow;
-                    return;
-                }
-
-                // 维护等待计数器
-                if !all_neighbors_wait {
-                    self.wait_counter = 10; // 暂停防止多机器人同时移动拥堵
-                } else if self.wait_counter > 0 {
-                    self.wait_counter -= 1;
-                }
-            }
-
-            BotState::Orbit => {
-                // 判断是否转回 WAIT (捕获于极化中心或脱离边缘)
-                // 条件：最近邻也在移动，或者脱离边缘，或者到达极化斑点 (间距近且至少2个极化邻居)
-                let reached_polar_spot = min_polar_dist <= dist_crit && count_polarized >= 2;
-                let stop_orbit = !is_edge
-                    || reached_polar_spot
-                    || nearest_neighbor_state != BotState::Wait
-                    || min_all_dist > (dist_crit + 25.0)
-                    || neighbors.is_empty();
-
-                if stop_orbit {
-                    self.state = BotState::Wait;
-                }
-            }
-
-            BotState::Follow => {
-                // 判断是否结束 FOLLOW
-                // 条件：已靠近邻居，或失去邻居，或最近邻不再 WAIT
-                let stop_follow = min_all_dist <= dist_crit
-                    || neighbors.is_empty()
-                    || nearest_neighbor_state != BotState::Wait;
-
-                if stop_follow {
-                    self.state = BotState::Wait;
-                }
-            }
-        }
+        todo!("【关卡 11 - 任务 3】在 robot.rs 中实现 Kilobot 三态行为状态机转移 evaluate_state_transitions");
     }
 }

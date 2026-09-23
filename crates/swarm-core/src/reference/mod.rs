@@ -13,4 +13,5 @@ pub mod ant_foraging;
 pub mod swarm_robotics;
 pub mod ring_1d;
 pub mod heterogeneous_swarms;
+pub mod turing_morphogenesis;
 

@@ -333,10 +333,33 @@ crates/swarm-core/src/
      - 在无中央指令与坐标系的条件下，自发沿图灵激活斑点位置生长出指状突起肢体构型（Protrusions / Lobes）。
   4. **损伤断肢切除与形态自愈再生 (Amputation & Self-Healing Regeneration)**:
      - 剪切切断部分突起指状分支后，剩余群体红外拓扑重构，自发重新孕育图灵斑点并再次启动组织流动再生新形态。
+- **任务目标**:
+  - **任务 1**: 分段线性饱和动力学与欧拉积分 (`reaction_rates`, `step` in `morphogen.rs`)
+    - 激活子 $u$ 与抑制子 $v$ 速率：
+      $$\text{rate}_u = \text{clamp}(a \cdot u + b \cdot v + c, 0, \text{synth\_u\_max}) - d \cdot u$$
+      $$\text{rate}_v = \text{clamp}(e \cdot u - f, 0, \text{synth\_v\_max}) - g \cdot v$$
+    - 扩散欧拉更新：
+      $$u \leftarrow \max(0, u + dt \cdot (r_{\text{scale}} \cdot \text{rate}_u + D_u \cdot \Delta u))$$
+      $$v \leftarrow \max(0, v + dt \cdot (r_{\text{scale}} \cdot \text{rate}_v + D_v \cdot \Delta v))$$
+  - **任务 2**: 局域拓扑感知与自适应外边缘探测 (`compute_weighted_nns`, `is_edge` in `edge_detector.rs`)
+    - 距离反比加权邻居均值：$w_i = \frac{1}{\max(d_i, 1.0)}, \quad \bar{N}_{\mathcal{N}} = \frac{\sum w_i N_i}{\sum w_i}$
+    - 边缘判定比率：$\frac{\bar{N}_s}{\bar{N}_{\mathcal{N}}} < \text{edge\_th} = 0.80$
+  - **任务 3**: Kilobot 三态行为状态机转移 (`evaluate_state_transitions` in `robot.rs`)
+    - `Wait -> Orbit`: 处于边缘、全邻居静止、非极化或远离斑点、等待计数为 0；
+    - `Wait -> Follow`: 处于边缘、最近邻居静止但距离过大（$> d_{\text{crit}} + 15$）；
+    - `Orbit -> Wait`: 脱离边缘、抵达极化斑点核心（$\ge 2$ 极化邻居且近距）、或脱团；
+    - `Follow -> Wait`: 成功重连近邻。
+  - **任务 4**: 连续空间多智能体图灵形态发生单步仿真 (`step` in `simulator.rs`)
+    - 邻居提取、图拉普拉斯反应-扩散、状态机评估、切向环绕与掉队跟随运动学、实体软核弹性防重叠排斥力。
 - **验证命令**:
-  ```bash
-  cargo test -p swarm-core -- turing_morphogenesis
-  ```
+  - 验证参考实现：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- reference::turing_morphogenesis
+    ```
+  - 练习区通关测试：
+    ```bash
+    cargo test --target-dir /tmp/swarm_target -p swarm-core -- turing_morphogenesis
+    ```
 - **运行实验与出图**:
   ```bash
   cargo run --release --example 16_scirobotics2018_turing_morphogenesis

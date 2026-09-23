@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 //! 图灵反应-扩散形态素动力学 (Turing Reaction-Diffusion Morphogen Dynamics)
 //!
 //! 依据 Science Robotics 2018 原作 C 语言实现：
@@ -103,46 +105,30 @@ impl MorphogenConcentration {
         self.u > threshold
     }
 
-    /// 计算分段线性饱和反应动力学生成速率 (synth_u, synth_v)
+    /// 【关卡 11 - 任务 1】计算分段线性饱和反应动力学生成速率 (synth_u, synth_v)
+    ///
+    /// 依据 Science Robotics 2018 原文动力学方程：
+    /// 1. rate_u = clamp(p.a * self.u + p.b * self.v + p.c, 0.0, p.synth_u_max) - p.d * self.u
+    /// 2. rate_v = clamp(p.e * self.u - p.f, 0.0, p.synth_v_max) - p.g * self.v
+    ///
+    /// # 提示
+    /// - 可使用 `f64::clamp(val, min, max)` 或 `if / else` 进行饱和截断；
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/turing_morphogenesis.rs`](../reference/turing_morphogenesis.rs)。
     pub fn reaction_rates(&self, p: &MorphogenParams) -> (f64, f64) {
-        let mut rate_u = p.a * self.u + p.b * self.v + p.c;
-        if rate_u < 0.0 {
-            rate_u = 0.0;
-        } else if rate_u > p.synth_u_max {
-            rate_u = p.synth_u_max;
-        }
-        rate_u -= p.d * self.u;
-
-        let mut rate_v = p.e * self.u - p.f;
-        if rate_v < 0.0 {
-            rate_v = 0.0;
-        } else if rate_v > p.synth_v_max {
-            rate_v = p.synth_v_max;
-        }
-        rate_v -= p.g * self.v;
-
-        (rate_u, rate_v)
+        todo!("【关卡 11 - 任务 1】在 morphogen.rs 中实现分段线性饱和动力学生成速率 reaction_rates");
     }
 
-    /// 单步欧拉显式数值积分更新形态素浓度
+    /// 【关卡 11 - 任务 1】单步欧拉显式数值积分更新形态素浓度
     ///
     /// du = r_scale * synth_u + D_u * lap_u
     /// dv = r_scale * synth_v + D_v * lap_v
+    ///
+    /// # 提示
+    /// - 调用 `self.reaction_rates(p)` 计算生成速率；
+    /// - 显式欧拉步进：`self.u += dt * du; self.v += dt * dv;`；
+    /// - 更新后需做非负性约束：`self.u = self.u.max(0.0); self.v = self.v.max(0.0);`。
     pub fn step(&mut self, lap_u: f64, lap_v: f64, dt: f64, p: &MorphogenParams) {
-        let (rate_u, rate_v) = self.reaction_rates(p);
-        let du = p.r_scale * rate_u + p.d_u * lap_u;
-        let dv = p.r_scale * rate_v + p.d_v * lap_v;
-
-        self.u += dt * du;
-        self.v += dt * dv;
-
-        // 保证浓度非负
-        if self.u < 0.0 {
-            self.u = 0.0;
-        }
-        if self.v < 0.0 {
-            self.v = 0.0;
-        }
+        todo!("【关卡 11 - 任务 1】在 morphogen.rs 中实现单步反应-扩散数值积分 step");
     }
 
     /// 根据当前浓度获得 LED 颜色 (静态未移动状态下)

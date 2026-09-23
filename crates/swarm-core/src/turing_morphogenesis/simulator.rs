@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code, unused_imports)]
+
 //! 群体形态发生仿真器与物理运动学 (Morphogenesis Swarm Simulator & Kinematics)
 //!
 //! 整合图灵反应-扩散动力学、局域边界识别、环绕/跟随运动学与软碰撞斥力模型。
@@ -156,161 +158,27 @@ impl MorphogenesisSwarm {
         dists
     }
 
-    /// 执行单步完整仿真更新
+    /// 【关卡 11 - 任务 4】执行单步完整仿真更新
     ///
-    /// 包括：
-    /// 1. 图拉普拉斯计算与形态素反应-扩散数值积分；
-    /// 2. 边缘检测指数平滑更新；
-    /// 3. 状态机评估 (Wait / Orbit / Follow)；
-    /// 4. 沿轮廓环绕、跟随与硬核软斥力位置更新。
+    /// 步骤包括：
+    /// 1. 邻居与边缘检测：依据通信半径 `self.params.diff_r` 收集每个机器人的近邻观测 `NeighborObservation`，
+    ///    回填各邻居的邻居数 `n_neighbors`，并调用 `edge_detector.update` 更新边缘平滑比率；
+    /// 2. 图拉普拉斯反应-扩散更新：
+    ///    - 仅静止态 `BotState::Wait` 参与扩散；
+    ///    - $lap_u = \sum_{j \in \mathcal{N}_i, state=Wait} (u_j - u_i)$；
+    ///    - $lap_v = \sum_{j \in \mathcal{N}_i, state=Wait} (v_j - v_i)$；
+    ///    - 调用 `robot.morphogen.step(lap_u, lap_v, dt, &self.params)`；
+    /// 3. 状态机评估：若 `self.movement_enabled`，调用 `evaluate_state_transitions`；
+    /// 4. 物理运动指令生成：
+    ///    - `BotState::Orbit`: 围绕最近的 `Wait` 邻居计算切向线速度向量与径向纠偏速度；
+    ///    - `BotState::Follow`: 沿指向最近邻居单位向量以 `move_speed` 前进；
+    /// 5. 实体软核防重叠排斥力：对距离 $d < 2 \cdot r_{bot}$ 的任意实体对施加对称弹性斥力；
+    /// 6. 施加位移并自增 `step_count` 和 `elapsed_time`。
+    ///
+    /// # 提示
+    /// - 若卡壳可参考 [`crates/swarm-core/src/reference/turing_morphogenesis.rs`](../reference/turing_morphogenesis.rs)。
     pub fn step(&mut self, dt: f64) {
-        let n = self.robots.len();
-        if n == 0 {
-            return;
-        }
-
-        let dists = self.compute_distances();
-
-        // 1. 提取邻居快照 (仅距离 <= diff_r 的机器人互为邻居)
-        let mut neighbor_obs: Vec<Vec<NeighborObservation>> = Vec::with_capacity(n);
-        for i in 0..n {
-            let mut my_obs = Vec::new();
-            for j in 0..n {
-                if i != j && dists[i][j] <= self.params.diff_r {
-                    my_obs.push(NeighborObservation {
-                        id: j,
-                        dist: dists[i][j],
-                        state: self.robots[j].state,
-                        morphogen: self.robots[j].morphogen,
-                        n_neighbors: 0, // 稍后回填
-                    });
-                }
-            }
-            neighbor_obs.push(my_obs);
-        }
-
-        // 回填邻居的邻居数 N_Neighbors
-        let neighbor_counts: Vec<usize> = neighbor_obs.iter().map(|obs| obs.len()).collect();
-        for i in 0..n {
-            let count_i = neighbor_counts[i];
-            for obs in &mut neighbor_obs[i] {
-                obs.n_neighbors = neighbor_counts[obs.id];
-            }
-            // 顺带更新边缘检测器
-            let edge_input: Vec<(f64, usize)> =
-                neighbor_obs[i].iter().map(|o| (o.dist, o.n_neighbors)).collect();
-            self.robots[i].edge_detector.update(count_i, &edge_input);
-        }
-
-        // 2. 图拉普拉斯计算与反应-扩散更新 (仅静止态 WAIT 机器人参与扩散)
-        for i in 0..n {
-            if self.robots[i].state != BotState::Orbit && self.robots[i].state != BotState::Follow {
-                let mut lap_u = 0.0;
-                let mut lap_v = 0.0;
-                let my_u = self.robots[i].morphogen.u;
-                let my_v = self.robots[i].morphogen.v;
-
-                for obs in &neighbor_obs[i] {
-                    // 原代码规定：只有非移动态邻居才计入扩散
-                    if obs.state == BotState::Wait {
-                        lap_u += obs.morphogen.u - my_u;
-                        lap_v += obs.morphogen.v - my_v;
-                    }
-                }
-
-                self.robots[i].morphogen.step(lap_u, lap_v, dt, &self.params);
-            }
-        }
-
-        // 3. 状态机流转 (仅在形态发生移动开启时生效)
-        if self.movement_enabled {
-            for i in 0..n {
-                self.robots[i].evaluate_state_transitions(
-                    &neighbor_obs[i],
-                    self.dist_crit,
-                    self.params.polar_th,
-                );
-            }
-        }
-
-        // 4. 物理运动更新
-        let mut displacements = vec![[0.0, 0.0]; n];
-
-        for i in 0..n {
-            match self.robots[i].state {
-                BotState::Wait => {
-                    // 静止待命，无需运动指令
-                }
-                BotState::Orbit => {
-                    // 沿外轮廓环绕最近的 WAIT 邻居
-                    if let Some(nearest) = neighbor_obs[i]
-                        .iter()
-                        .filter(|o| o.state == BotState::Wait)
-                        .min_by(|a, b| a.dist.partial_cmp(&b.dist).unwrap())
-                    {
-                        let nb_pos = self.robots[nearest.id].pos;
-                        let rx = self.robots[i].pos[0] - nb_pos[0];
-                        let ry = self.robots[i].pos[1] - nb_pos[1];
-                        let r_len = (rx * rx + ry * ry).sqrt().max(1e-4);
-
-                        // 切向速度 (顺时针: (ry, -rx) * dir)
-                        let tangent_x = (ry / r_len) * self.robots[i].orbit_dir;
-                        let tangent_y = (-rx / r_len) * self.robots[i].orbit_dir;
-
-                        // 径向距离纠偏 (期望保持在 dist_crit 附近)
-                        let radial_err = r_len - self.dist_crit;
-                        let radial_x = -(rx / r_len) * (radial_err * 0.3);
-                        let radial_y = -(ry / r_len) * (radial_err * 0.3);
-
-                        displacements[i][0] += (tangent_x * self.move_speed + radial_x) * dt;
-                        displacements[i][1] += (tangent_y * self.move_speed + radial_y) * dt;
-                    }
-                }
-                BotState::Follow => {
-                    // 掉队追赶最近邻居
-                    if let Some(nearest) = neighbor_obs[i]
-                        .iter()
-                        .min_by(|a, b| a.dist.partial_cmp(&b.dist).unwrap())
-                    {
-                        let nb_pos = self.robots[nearest.id].pos;
-                        let dx = nb_pos[0] - self.robots[i].pos[0];
-                        let dy = nb_pos[1] - self.robots[i].pos[1];
-                        let dist = (dx * dx + dy * dy).sqrt().max(1e-4);
-
-                        displacements[i][0] += (dx / dist) * self.move_speed * dt;
-                        displacements[i][1] += (dy / dist) * self.move_speed * dt;
-                    }
-                }
-            }
-        }
-
-        // 5. 实体软核非重叠排斥力 (Kilobot Physical Anti-Collision Repulsion)
-        let min_dist = self.bot_radius * 2.0;
-        for i in 0..n {
-            for j in (i + 1)..n {
-                let d = dists[i][j];
-                if d < min_dist && d > 1e-4 {
-                    let overlap = min_dist - d;
-                    let nx = (self.robots[i].pos[0] - self.robots[j].pos[0]) / d;
-                    let ny = (self.robots[i].pos[1] - self.robots[j].pos[1]) / d;
-                    let push = overlap * 0.45;
-
-                    displacements[i][0] += nx * push;
-                    displacements[i][1] += ny * push;
-                    displacements[j][0] -= nx * push;
-                    displacements[j][1] -= ny * push;
-                }
-            }
-        }
-
-        // 施加位移
-        for i in 0..n {
-            self.robots[i].pos[0] += displacements[i][0];
-            self.robots[i].pos[1] += displacements[i][1];
-        }
-
-        self.step_count += 1;
-        self.elapsed_time += dt;
+        todo!("【关卡 11 - 任务 4】在 simulator.rs 中实现连续空间多智能体图灵形态发生单步仿真 step");
     }
 
     /// 仅运行图灵扩散步骤 (用于初期斑图孕育阶段)
