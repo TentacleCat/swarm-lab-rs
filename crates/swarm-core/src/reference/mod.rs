@@ -9,6 +9,7 @@ pub mod nature2017_2d;
 pub mod naming_game;
 pub mod llm_naming_game;
 pub mod minority_game;
+pub mod ant_foraging;
 pub mod ring_1d;
 pub mod heterogeneous_swarms;
 

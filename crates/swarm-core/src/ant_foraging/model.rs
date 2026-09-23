@@ -2,6 +2,8 @@
 //!
 //! 基于 arXiv:1409.3808 (*Journal of Theoretical Biology*, 2015) 的
 //! 四组分非线性趋化偏微分方程组：
+
+#![allow(unused_variables, dead_code)]
 //!
 //! $$
 //! \begin{cases}
@@ -200,94 +202,21 @@ impl AntChemotaxisModel {
         }
     }
 
-    /// 执行一次显式守恒有限差分迎风积分步
+    /// ## 任务 3: 执行一次显式守恒有限差分迎风积分步
     ///
-    /// 满足稳定 CFL 条件（推荐 $dt \approx 0.001 \sim 0.002$）
+    /// ## 动力学控制方程 (arXiv:1409.3808):
+    /// 1. **食物消耗场 $c$**: $\partial_t c = - u c$
+    ///    采用半隐式稳定格式：$c^{n+1} = \max(0, c^n / (1 + dt \cdot u^n))$；
+    /// 2. **信息素场梯度与趋化平流速度**: $\mathbf{V}_{\text{chem}} = \chi_u \nabla v$
+    ///    - 调用 `self.v.compute_gradient`；
+    ///    - 趋化散度项：$\nabla \cdot (u \mathbf{V}_{\text{chem}})$ 调用 `compute_upwind_divergence`；
+    /// 3. **觅食蚁场 $u$**: $\partial_t u = \Delta u - \nabla \cdot (u \mathbf{V}_{\text{chem}}) - u c + \lambda w N(x) + M(t) N(x)$；
+    /// 4. **搬运蚁场 $w$**: $\partial_t w = D_w \Delta w - \nabla \cdot (w \nabla a) + u c - \lambda w N(x)$；
+    /// 5. **信息素场 $v$**: $\partial_t v = D_v \Delta v + P(x) w - \varepsilon v$；
+    /// 6. **同步更新状态数组与时间**: `self.time += dt`。
     pub fn step(&mut self, dt: f64) {
-        let n_cells = self.u.nx * self.u.ny;
-
-        // 计算当前涌出源 $M(t)$
-        let m_t = if self.time <= self.config.emerge_time {
-            self.config.emerge_rate
-        } else {
-            0.0
-        };
-
-        // --- 1. 更新食物场 c: \partial_t c = - u * c ---
-        // c^{n+1} = c^n / (1 + dt * u^n) 采用半隐式解析解，保证 c 严格非负单调递减
-        for idx in 0..n_cells {
-            let u_val = self.u.data[idx];
-            let c_val = self.c.data[idx];
-            self.c.data[idx] = (c_val / (1.0 + dt * u_val)).max(0.0);
-        }
-
-        // --- 2. 计算信息素场梯度并合成趋化对流速度场 V_chem = chi_u * \nabla v ---
-        self.v.compute_gradient(&mut self.buf_grad_x, &mut self.buf_grad_y);
-        let chi_u = self.config.chi_u;
-        for idx in 0..n_cells {
-            self.buf_vx[idx] = chi_u * self.buf_grad_x[idx];
-            self.buf_vy[idx] = chi_u * self.buf_grad_y[idx];
-        }
-
-        // 计算趋化散度 \nabla \cdot (u * V_chem)
-        self.u.compute_upwind_divergence(&self.buf_vx, &self.buf_vy, &mut self.buf_div);
-
-        // 计算拉普拉斯 \Delta u
-        self.u.compute_laplacian(&mut self.buf_lap);
-
-        // --- 3. 准备更新 u: \partial_t u = \Delta u - \nabla\cdot(u V_chem) - u*c + \lambda*w*N + M*N ---
-        // 先暂存在 buf_grad_x 中
-        let lambda = self.config.lambda;
-        for idx in 0..n_cells {
-            let u_val = self.u.data[idx];
-            let w_val = self.w.data[idx];
-            let c_val = self.c.data[idx];
-            let n_val = self.n_field.data[idx];
-            let lap_u = self.buf_lap[idx];
-            let div_chem = self.buf_div[idx];
-
-            let du_dt = lap_u - div_chem - u_val * c_val + lambda * w_val * n_val + m_t * n_val;
-            self.buf_grad_x[idx] = (u_val + dt * du_dt).max(0.0);
-        }
-
-        // --- 4. 准备更新 w: \partial_t w = D_w \Delta w - \nabla\cdot(w \nabla a) + u*c - \lambda*w*N ---
-        // 计算回巢对流散度 \nabla \cdot (w \nabla a)
-        self.w.compute_upwind_divergence(&self.va_x, &self.va_y, &mut self.buf_div);
-        self.w.compute_laplacian(&mut self.buf_lap);
-
-        let d_w = self.config.d_w;
-        for idx in 0..n_cells {
-            let u_val = self.u.data[idx];
-            let w_val = self.w.data[idx];
-            let c_val = self.c.data[idx];
-            let n_val = self.n_field.data[idx];
-            let lap_w = self.buf_lap[idx];
-            let div_ret = self.buf_div[idx];
-
-            let dw_dt = d_w * lap_w - div_ret + u_val * c_val - lambda * w_val * n_val;
-            self.buf_grad_y[idx] = (w_val + dt * dw_dt).max(0.0);
-        }
-
-        // --- 5. 准备更新 v: \partial_t v = D_v \Delta v + P(x) * w - \varepsilon * v ---
-        self.v.compute_laplacian(&mut self.buf_lap);
-        let d_v = self.config.d_v;
-        let eps = self.config.epsilon;
-
-        for idx in 0..n_cells {
-            let v_val = self.v.data[idx];
-            let w_val = self.w.data[idx];
-            let p_val = self.p_field.data[idx];
-            let lap_v = self.buf_lap[idx];
-
-            let dv_dt = d_v * lap_v + p_val * w_val - eps * v_val;
-            self.v.data[idx] = (v_val + dt * dv_dt).max(0.0);
-        }
-
-        // --- 6. 将新状态同步写回 u 和 w ---
-        self.u.data.copy_from_slice(&self.buf_grad_x);
-        self.w.data.copy_from_slice(&self.buf_grad_y);
-
-        self.time += dt;
+        // TODO: 请实现四场非线性 PDE 的显式守恒迎风积分步
+        todo!("【关卡 9 - 任务 3】请实现四组分偏微分动力学显式时间积分 step");
     }
 
     /// 计算当前时刻系统的各项物理与觅食统计指标

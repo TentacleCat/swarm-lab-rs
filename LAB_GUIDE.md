@@ -17,6 +17,7 @@ crates/swarm-core/src/
 │   ├── naming_game.rs
 │   ├── llm_naming_game.rs
 │   ├── minority_game.rs
+│   ├── ant_foraging.rs
 │   └── heterogeneous_swarms.rs
 │
 ├── metrics.rs        # 🎯 [实战关卡 1] 切片借用与序参量计算 (从这里开始！)
@@ -242,9 +243,11 @@ crates/swarm-core/src/
 - **论文**: *"Modeling ant foraging: a chemotaxis approach with pheromones and trail formation"*, Paulo Amorim, [arXiv:1409.3808](https://arxiv.org/abs/1409.3808) (*J. Theor. Biol.* 2015)
 - **本地文档**: [`papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/README.md`](papers/ant-foraging/01-chemotaxis-trail-formation-arxiv1409/README.md)
 - **代码文件**:
-  - 空间网格与偏微分算子: [`crates/swarm-core/src/ant_foraging/grid.rs`](crates/swarm-core/src/ant_foraging/grid.rs)
-  - 四场耦合动力学状态机: [`crates/swarm-core/src/ant_foraging/model.rs`](crates/swarm-core/src/ant_foraging/model.rs)
-  - 统计指标与质量守恒: [`crates/swarm-core/src/ant_foraging/metrics.rs`](crates/swarm-core/src/ant_foraging/metrics.rs)
+  - 实战练习区:
+    - 空间网格与偏微分算子: [`crates/swarm-core/src/ant_foraging/grid.rs`](crates/swarm-core/src/ant_foraging/grid.rs)
+    - 四场耦合动力学状态机: [`crates/swarm-core/src/ant_foraging/model.rs`](crates/swarm-core/src/ant_foraging/model.rs)
+    - 统计指标与质量守恒: [`crates/swarm-core/src/ant_foraging/metrics.rs`](crates/swarm-core/src/ant_foraging/metrics.rs)
+  - 标准参考答案: [`crates/swarm-core/src/reference/ant_foraging.rs`](crates/swarm-core/src/reference/ant_foraging.rs)
 - **学习的核心物理与数值计算机制**:
   1. **连续介质 PDE 建模**:
      - 觅食蚁场 $u$（扩散 + 沿 $\nabla v$ 趋化平流 + 接触食物转化为 $w$）；
@@ -259,6 +262,10 @@ crates/swarm-core/src/
      - 食物耗尽后信息素自然衰减，蚁道自发解体。
   4. **参数空间与搬运效率**:
      - 验证论文核心结论：自组织蚁道的形成显著加速了食物的运载效率。
+- **任务目标**:
+  1. 在 `Grid2D::compute_laplacian` 中实现齐次零通量虚节点镜像五点拉普拉斯差分；
+  2. 在 `Grid2D::compute_upwind_divergence` 中实现基于界面风向判定的守恒迎风通量差分；
+  3. 在 `AntChemotaxisModel::step` 中实现四场显式耦合时间推进与半隐式食物消耗更新。
 - **验证命令**:
   ```bash
   cargo test -p swarm-core -- ant_foraging

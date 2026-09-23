@@ -4,6 +4,8 @@
 //! 五点中心差分拉普拉斯算子 $\Delta$、中心差分梯度 $(\partial_x, \partial_y)$ 以及
 //! 守恒型一阶迎风对流散度算子 $\nabla \cdot (\phi \mathbf{V})$。
 
+#![allow(unused_variables, dead_code)]
+
 use std::ops::{Index, IndexMut};
 
 /// 二维标量场连续网格
@@ -68,40 +70,19 @@ impl Grid2D {
         sum * self.dx * self.dy
     }
 
-    /// 计算五点中心差分拉普拉斯算子 $\Delta \phi$，带齐次零通量 Neumann 边界条件
+    /// ## 任务 1: 计算五点中心差分拉普拉斯算子 $\Delta \phi$（带齐次零通量 Neumann 边界）
     ///
-    /// 边界处理使用虚节点镜像：
+    /// 核心差分格式:
+    /// $$\Delta \phi_{i,j} = \frac{\phi_{i+1,j} - 2\phi_{i,j} + \phi_{i-1,j}}{\Delta x^2} + \frac{\phi_{i,j+1} - 2\phi_{i,j} + \phi_{i,j-1}}{\Delta y^2}$$
+    ///
+    /// 边界处理使用虚节点零通量反射镜像：
     /// - 左边界 $i=0$: $\phi_{-1, j} = \phi_{1, j}$
     /// - 右边界 $i=nx-1$: $\phi_{nx, j} = \phi_{nx-2, j}$
+    /// - 下边界 $j=0$: $\phi_{i, -1} = \phi_{i, 1}$
+    /// - 上边界 $j=ny-1$: $\phi_{i, ny} = \phi_{i, ny-2}$
     pub fn compute_laplacian(&self, out: &mut [f64]) {
-        assert_eq!(out.len(), self.data.len());
-        let inv_dx2 = 1.0 / (self.dx * self.dx);
-        let inv_dy2 = 1.0 / (self.dy * self.dy);
-        let nx = self.nx;
-        let ny = self.ny;
-
-        for j in 0..ny {
-            let j_prev = if j == 0 { 1 } else { j - 1 };
-            let j_next = if j == ny - 1 { ny - 2 } else { j + 1 };
-            let row_offset = j * nx;
-            let row_prev = j_prev * nx;
-            let row_next = j_next * nx;
-
-            for i in 0..nx {
-                let i_prev = if i == 0 { 1 } else { i - 1 };
-                let i_next = if i == nx - 1 { nx - 2 } else { i + 1 };
-
-                let c = self.data[row_offset + i];
-                let l = self.data[row_offset + i_prev];
-                let r = self.data[row_offset + i_next];
-                let d = self.data[row_prev + i];
-                let u = self.data[row_next + i];
-
-                let d2x = (r - 2.0 * c + l) * inv_dx2;
-                let d2y = (u - 2.0 * c + d) * inv_dy2;
-                out[row_offset + i] = d2x + d2y;
-            }
-        }
+        // TODO: 请实现五点中心差分拉普拉斯算子
+        todo!("【关卡 9 - 任务 1】请实现网格五点中心差分拉普拉斯算子 compute_laplacian");
     }
 
     /// 计算中心差分梯度分量 $(\partial_x \phi, \partial_y \phi)$
@@ -147,80 +128,15 @@ impl Grid2D {
         }
     }
 
-    /// 守恒型一阶迎风对流散度 $\nabla \cdot (\phi \mathbf{V})$
+    /// ## 任务 2: 守恒型一阶迎风对流散度 $\nabla \cdot (\phi \mathbf{V})$
     ///
     /// 给定标量场 $\phi$（即 `self`）与速度场 $\mathbf{V} = (v_x, v_y)$，
     /// 在单元控制面 $(i+1/2, j)$ 和 $(i, j+1/2)$ 采用上游风迎风插值计算数值质量通量，
     /// 在区域外法向界面通量置 0（满足零通量自然边界条件），确保全局质量严格守恒：
-    /// $\sum_{i,j} \nabla \cdot (\phi \mathbf{V})_{i,j} \Delta x \Delta y = 0$。
+    /// $$\sum_{i,j} \nabla \cdot (\phi \mathbf{V})_{i,j} \Delta x \Delta y = 0$$
     pub fn compute_upwind_divergence(&self, vx: &[f64], vy: &[f64], div_out: &mut [f64]) {
-        assert_eq!(vx.len(), self.data.len());
-        assert_eq!(vy.len(), self.data.len());
-        assert_eq!(div_out.len(), self.data.len());
-
-        let nx = self.nx;
-        let ny = self.ny;
-        let inv_dx = 1.0 / self.dx;
-        let inv_dy = 1.0 / self.dy;
-
-        // 计算 x 方向单元界面通量 Fx_{i+1/2, j}，尺寸 (nx - 1) * ny
-        // 边界 i=0 左侧与 i=nx-1 右侧通量为 0 (零流出边界)
-        for j in 0..ny {
-            let row = j * nx;
-            for i in 0..nx {
-                // x 方向通量:
-                // 左面通量 F_west (即界面 i-1/2)
-                let f_west = if i == 0 {
-                    0.0
-                } else {
-                    let v_face = 0.5 * (vx[row + i - 1] + vx[row + i]);
-                    if v_face >= 0.0 {
-                        v_face * self.data[row + i - 1]
-                    } else {
-                        v_face * self.data[row + i]
-                    }
-                };
-
-                // 右面通量 F_east (即界面 i+1/2)
-                let f_east = if i == nx - 1 {
-                    0.0
-                } else {
-                    let v_face = 0.5 * (vx[row + i] + vx[row + i + 1]);
-                    if v_face >= 0.0 {
-                        v_face * self.data[row + i]
-                    } else {
-                        v_face * self.data[row + i + 1]
-                    }
-                };
-
-                // y 方向通量:
-                // 南面通量 F_south (即界面 j-1/2)
-                let f_south = if j == 0 {
-                    0.0
-                } else {
-                    let v_face = 0.5 * (vy[(j - 1) * nx + i] + vy[j * nx + i]);
-                    if v_face >= 0.0 {
-                        v_face * self.data[(j - 1) * nx + i]
-                    } else {
-                        v_face * self.data[j * nx + i]
-                    }
-                };
-
-                // 北面通量 F_north (即界面 j+1/2)
-                let f_north = if j == ny - 1 {
-                    0.0
-                } else {
-                    let v_face = 0.5 * (vy[j * nx + i] + vy[(j + 1) * nx + i]);
-                    if v_face >= 0.0 {
-                        v_face * self.data[j * nx + i]
-                    } else {
-                        v_face * self.data[(j + 1) * nx + i]
-                    }
-                };
-
-                div_out[row + i] = (f_east - f_west) * inv_dx + (f_north - f_south) * inv_dy;
-            }
-        }
+        // TODO: 请实现守恒型一阶迎风对流散度计算
+        todo!("【关卡 9 - 任务 2】请实现一阶守恒型迎风对流散度算子 compute_upwind_divergence");
     }
 }
 

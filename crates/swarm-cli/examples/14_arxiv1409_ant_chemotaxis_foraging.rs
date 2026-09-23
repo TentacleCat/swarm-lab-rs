@@ -21,7 +21,16 @@ use std::fs::{self, File};
 use std::io::{BufWriter, Write};
 use std::process::Command;
 use std::time::Instant;
-use swarm_core::ant_foraging::{AntChemotaxisConfig, AntChemotaxisModel, FoodSource, Grid2D};
+// =========================================================================
+// 💡 模式切换：
+// 1. 默认使用 reference 参考答案，确保一键直接出效果和复现论文结果；
+// 2. 当你完成了关卡 9 的练习后，可取消注释下方、注释上方，测试自己手写的代码！
+// =========================================================================
+use swarm_core::reference::ant_foraging::AntChemotaxisModelReference as AntChemotaxisModel;
+use swarm_core::ant_foraging::{AntChemotaxisConfig, FoodSource, Grid2D};
+
+// 练习区模式（完成实战后取消注释）：
+// use swarm_core::ant_foraging::{AntChemotaxisConfig, AntChemotaxisModel, FoodSource, Grid2D};
 
 fn export_snapshot_csv(path: &str, u: &Grid2D, w: &Grid2D, v: &Grid2D, c: &Grid2D) -> std::io::Result<()> {
     let file = File::create(path)?;
