@@ -1,0 +1,24 @@
+LAB_GUIDE.md
+  h_c76f4ec917e583 17-19,180-197,201,203
+crates/swarm-cli/examples/12_arxiv2026_llm_naming_game.rs
+  h_c76f4ec917e583 13-24
+crates/swarm-core/src/naming_game/llm_model.rs
+  h_c76f4ec917e583 1,4,6-16,60-74,76-77,119-121,146-165,168-169,171-175,177-178,181-185,187-188,191-194,196-197,200-205,208-209
+crates/swarm-core/src/naming_game/mod.rs
+  h_c76f4ec917e583 132-158,160-188,190-212,216,221-222,226-227,231-232
+crates/swarm-core/src/reference/llm_naming_game.rs
+  h_c76f4ec917e583 1-307
+crates/swarm-core/src/reference/mod.rs
+  h_c76f4ec917e583 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "29a97aaa9571904f0de076c32b0a82056f87d6e6",
+  "prompts": {},
+  "humans": {
+    "h_c76f4ec917e583": {
+      "author": "TentacleCat <131333217+TentacleCat@users.noreply.github.com>"
+    }
+  }
+}
