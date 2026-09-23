@@ -21,11 +21,11 @@ pub type WordId = u32;
 ///
 /// 计算系统中所有智能体当前拥有的词汇条目总数。
 pub fn total_words(inventories: &[HashSet<WordId>]) -> usize {
+    inventories.iter().map(|inv| inv.len()).sum()
     // TODO: 请使用迭代器对每个智能体的 inventory.len() 进行求和
     //
     // 提示:
     // inventories.iter().map(|inv| inv.len()).sum()
-    todo!("【关卡 6 - 任务 1】请在此处实现 total_words 函数");
 }
 
 /// ## 任务 2: 全网不同词汇种类数 $N_d(t)$
@@ -34,6 +34,13 @@ pub fn total_words(inventories: &[HashSet<WordId>]) -> usize {
 ///
 /// 统计当前整个群体中存在多少种不同的词汇（去重后的总数）。
 pub fn distinct_words(inventories: &[HashSet<WordId>]) -> usize {
+    inventories
+        .iter()
+        .flatten()
+        .copied()
+        .collect::<HashSet<WordId>>()
+        .len()
+
     // TODO: 统计所有智能体词汇库的并集大小
     //
     // 提示:
@@ -41,7 +48,6 @@ pub fn distinct_words(inventories: &[HashSet<WordId>]) -> usize {
     // 或者使用迭代器：
     // let all_words: HashSet<WordId> = inventories.iter().flatten().copied().collect();
     // all_words.len()
-    todo!("【关卡 6 - 任务 2】请在此处实现 distinct_words 函数");
 }
 
 /// ## 任务 3: 微观词汇量分布 $\mathcal{P}_n(k | t)$
@@ -62,14 +68,36 @@ pub fn inventory_size_distribution(
     // 2. 统计每个词汇量 n (即 inv.len()) 出现的频数 count；
     // 3. 将频数除以目标节点总数进行归一化，使得 sum(P_n) = 1.0；
     // 4. 返回 BTreeMap<usize, f64>。
-    todo!("【关卡 6 - 任务 3】请在此处实现 inventory_size_distribution 函数");
+    let sizes: Vec<usize> = match filter_nodes {
+        Some(nodes) => nodes.iter().map(|&idx| inventories[idx].len()).collect(),
+        None => inventories.iter().map(|inv| inv.len()).collect(),
+    };
+    if sizes.is_empty() {
+        return BTreeMap::new();
+    }
+    let total = sizes.len();
+    let mut counts = BTreeMap::new();
+    sizes
+        .into_iter()
+        .for_each(|len| *counts.entry(len).or_insert(0) += 1);
+    counts
+        .into_iter()
+        .map(|(len, count)| (len, (count as f64) / (total as f64)))
+        .collect()
 }
 
 /// ## 任务 4: 检查是否达成全网单一共识 (Consensus)
 ///
 /// 条件: 每个智能体词汇表均只有 1 个词汇，且全网不同词汇总数 $N_d = 1$。
 pub fn is_consensus(inventories: &[HashSet<WordId>]) -> bool {
+    // if inventories.is_empty() {
+    //     return false;
+    // }
+    // distinct_words(inventories) == 1 && inventories.iter().all(|inv| inv.len() == 1)
     // TODO:
     // 检查是否非空，且第一个智能体的词汇非空，且所有智能体的词汇都与其完全相同且长度为 1
-    todo!("【关卡 6 - 任务 4】请在此处实现 is_consensus 函数");
+    let Some(first) = inventories.first() else {
+        return false;
+    };
+    first.len() == 1 && inventories.iter().all(|inv| inv == first)
 }

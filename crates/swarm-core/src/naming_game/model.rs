@@ -91,6 +91,33 @@ impl<G: Network> NamingGame<G> {
     ///    - 返回 `InteractionResult`。
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> InteractionResult {
         // TODO: 请按照上述 4 个步骤实现单步博弈规则
-        todo!("【关卡 6 - 任务 5】请实现 Direct Naming Game 的单步博弈规则 step");
+        let n = self.num_agents();
+        let speaker = rng.gen_range(0..n);
+        let hearer = self.network.random_neighbor(speaker, rng);
+        if self.inventories[speaker].is_empty() {
+            let new_word = self.next_word_id;
+            self.next_word_id += 1;
+            self.inventories[speaker].insert(new_word);
+        }
+
+        let speaker_inv = &self.inventories[speaker];
+        let chosen_idx = rng.gen_range(0..speaker_inv.len());
+        let word = *speaker_inv.iter().nth(chosen_idx).unwrap();
+
+        let success = self.inventories[hearer].contains(&word);
+        if success {
+            self.inventories[speaker] = HashSet::from([word]);
+            self.inventories[hearer] = HashSet::from([word]);
+            self.total_successes += 1;
+        } else {
+            self.inventories[hearer].insert(word);
+        }
+        self.time_step += 1;
+        InteractionResult {
+            speaker,
+            hearer,
+            transmitted_word: word,
+            success,
+        }
     }
 }
