@@ -74,7 +74,26 @@ impl LlmArchitecture {
     ///    - `CustomTwoRate { pi, phi }`: 直接解构返回 `(*pi, *phi)`
     pub fn get_rates(&self, temperature: f64) -> (f64, f64) {
         // TODO: 请按照上述经验公式实现各架构速率计算
-        todo!("【关卡 7 - 任务 1】请实现不同大模型架构在温度 T 下的有效通道速率计算 (pi, phi)");
+
+        let t = temperature.clamp(0.0, 2.5);
+        match self {
+            LlmArchitecture::Llama3_1_8B => {
+                let pi = (1.0 - 0.225 * t).clamp(0.55, 1.0);
+                let phi = (0.05 + 0.225 * t).clamp(0.05, 0.50);
+                (pi, phi)
+            }
+            LlmArchitecture::Mistral7B => {
+                let pi = 0.99;
+                let phi = (0.02 * (-0.5 * t).exp()).clamp(0.005, 0.05);
+                (pi, phi)
+            }
+            LlmArchitecture::Phi3_14B => {
+                let pi = (0.76 - 0.23 * t).clamp(0.28, 0.76);
+                let phi = (0.01 + 0.015 * t).clamp(0.01, 0.04);
+                (pi, phi)
+            }
+            LlmArchitecture::CustomTwoRate { pi, phi } => (*pi, *phi),
+        }
     }
 }
 
@@ -117,8 +136,8 @@ impl<G: Network> LlmNamingGame<G> {
     pub fn new(network: G, architecture: LlmArchitecture, temperature: f64) -> Self {
         let n = network.num_nodes();
         // 允许练习区在 get_rates 尚未实现时优雅处理，若已实现则取对应值
-        let (pi, phi) = std::panic::catch_unwind(|| architecture.get_rates(temperature))
-            .unwrap_or((1.0, 0.0));
+        let (pi, phi) =
+            std::panic::catch_unwind(|| architecture.get_rates(temperature)).unwrap_or((1.0, 0.0));
 
         Self {
             network,
@@ -175,7 +194,41 @@ impl<G: Network> LlmNamingGame<G> {
     ///    - 返回 `LlmInteractionResult`。
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> LlmInteractionResult {
         // TODO: 请按照上述规则实现四通道博弈单步 step
-        todo!("【关卡 7 - 任务 2】请实现大模型四通道微观单步博弈规则 step");
+        let n = self.num_agents();
+        let speaker = rng.gen_range(0..n);
+        let hearer = self.network.random_neighbor(speaker, rng);
+        if self.inventories[speaker].is_empty() {
+            let new_word = self.next_word_id;
+            self.next_word_id += 1;
+            self.inventories[speaker].insert(new_word);
+        }
+
+        let inv = &self.inventories[speaker];
+        let idx = rng.gen_range(0..inv.len());
+        let word = *inv.iter().nth(idx).unwrap();
+
+        let is_in_inventory = self.inventories[hearer].contains(&word);
+        let (llm_accepted, channel) = if is_in_inventory {
+            if rng.gen_bool(self.pi) {
+                self.tp_count += 1;
+                (true, ChannelOutcome::TruePositive)
+            } else {
+                self.fn_count += 1;
+                (false, ChannelOutcome::FalseNegative)
+            }
+        } else {
+            if rng.gen_bool(self.phi) {
+                self.fp_count += 1;
+                (true, ChannelOutcome::FalsePositive)
+            } else {
+                self.tn_count += 1;
+                (false, ChannelOutcome::TrueNegative)
+            }
+        };
+        if self.recent_history.len() >= self.window_size {
+            self.recent_history.pop_front();
+        }
+        self.recent_history.push_back(channel);
     }
 
     /// ## 任务 3: 滑动窗口在库比例 $m(t)$ 与微观净漂移算子 $\Delta(t)$
