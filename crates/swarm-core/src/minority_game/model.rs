@@ -85,7 +85,63 @@ impl<G: Network> MinorityGame<G> {
     ///    - `self.time_step += 1`，返回 $A(t)$。
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> i32 {
         // TODO: 请按照上述 3 个步骤实现少数派博弈的单步状态机
-        todo!("【关卡 8 - 任务 4】请实现少数派博弈单步状态机 step（含邻域从众判定、胜负判定与历史位运算更新）");
+
+        let n = self.num_agents();
+        let mut actions = Vec::with_capacity(n);
+
+        if !self.herding_enabled || self.network.is_none() {
+            actions = self
+                .agents
+                .iter()
+                .map(|agent| agent.self_action(self.history))
+                .collect();
+        } else if self.herding_enabled && self.network.is_some() {
+            let net = self.network.as_ref().unwrap();
+            for i in 0..n {
+                let neighbors = net.neighbors(i);
+                let my_score = self.agents[i].highest_score();
+                let my_action = self.agents[i].self_action(self.history);
+                if neighbors.is_empty() {
+                    actions.push(my_action);
+                } else {
+                    let &best_neighbor = neighbors
+                        .iter()
+                        .max_by_key(|&&j| self.agents[j].highest_score())
+                        .unwrap();
+                    let neighbor_score = self.agents[best_neighbor].highest_score();
+                    let neighbor_action = self.agents[best_neighbor].self_action(self.history);
+
+                    if neighbor_score > my_score {
+                        actions.push(neighbor_action);
+                    } else {
+                        actions.push(my_action);
+                    }
+                }
+            }
+        }
+        let total_a = actions.iter().map(|&a| a as i32).sum::<i32>();
+        let winning_action = if total_a < 0 {
+            1
+        } else if total_a > 0 {
+            -1
+        } else {
+            if rng.gen_bool(0.5) {
+                1
+            } else {
+                -1
+            }
+        };
+
+        for agent in &mut self.agents {
+            for strat in &mut agent.strategies {
+                strat.update_score(winning_action, self.history);
+            }
+        }
+
+        let bit = if winning_action == 1 { 1 } else { 0 };
+        self.history = ((self.history << 1) | bit) & ((1 << self.memory) - 1);
+        self.time_step += 1;
+        total_a
     }
 
     /// 连续推进多个时间步，并返回各步的净动作序列 A(t)

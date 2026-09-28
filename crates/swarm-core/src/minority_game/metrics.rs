@@ -13,7 +13,20 @@
 /// 低于 1.0 说明群体自发形成了高效协调；高于 1.0 说明群体盲目扎堆（羊群效应）。
 pub fn normalized_volatility(attendances: &[i32], num_agents: usize) -> f64 {
     // TODO: 实现归一化波动率计算
-    todo!("【关卡 8 - 任务 3】请实现市场归一化波动率 sigma^2 / N 计算");
+    if attendances.is_empty() || num_agents == 0 {
+        return 0.0;
+    }
+    let sum = attendances.iter().map(|&a| a as f64).sum::<f64>();
+    let t = attendances.len() as f64;
+    let mean = sum / t;
+
+    let var_sum = attendances
+        .iter()
+        .map(|&a| (a as f64 - mean).powi(2))
+        .sum::<f64>();
+    let variance = var_sum / t;
+
+    variance / num_agents as f64
 }
 
 /// 计算信息比例参数 alpha = 2^M / N

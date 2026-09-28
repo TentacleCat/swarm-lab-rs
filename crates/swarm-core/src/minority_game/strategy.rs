@@ -42,7 +42,11 @@ impl Strategy {
     #[inline]
     pub fn update_score(&mut self, winning_action: i8, history: usize) {
         // TODO: 请实现策略虚拟积分更新逻辑
-        todo!("【关卡 8 - 任务 1】请实现策略虚拟积分更新规则 update_score");
+        if self.actions[history] == winning_action {
+            self.virtual_score += 1;
+        } else {
+            self.virtual_score -= 1;
+        }
     }
 }
 
@@ -68,7 +72,12 @@ impl MgAgent {
     /// 遍历 `self.strategies`，寻找拥有最大 `virtual_score` 的策略下标并返回。
     pub fn best_strategy_index(&self) -> usize {
         // TODO: 寻找最佳策略下标
-        todo!("【关卡 8 - 任务 2】请实现智能体寻找最高得分策略下标 best_strategy_index");
+        self.strategies
+            .iter()
+            .enumerate()
+            .max_by_key(|(_, s)| s.virtual_score)
+            .map(|(idx, _)| idx)
+            .unwrap_or(0)
     }
 
     /// 获取当前手头策略的最高得分
