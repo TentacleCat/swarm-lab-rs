@@ -5,22 +5,22 @@
 //! 一键运行命令:
 //!   cargo run --release --example 12_arxiv2026_llm_naming_game
 
-use std::fs::File;
-use std::process::Command;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use std::fs::File;
+use std::process::Command;
 
 // =========================================================================
 // 💡 模式切换：
 // 1. 默认使用 reference 参考答案，确保一键直接出效果和复现论文结果；
 // 2. 当你完成了关卡 7 的练习后，可取消注释下方、注释上方，测试自己手写的代码！
 // =========================================================================
-use swarm_core::reference::llm_naming_game::{
-    LlmArchitecture, LlmNamingGameReference as LlmNamingGame,
-};
+// use swarm_core::reference::llm_naming_game::{
+//     LlmArchitecture, LlmNamingGameReference as LlmNamingGame,
+// };
 
 // 练习区模式（完成实战后取消注释）：
-// use swarm_core::naming_game::llm_model::{LlmArchitecture, LlmNamingGame};
+use swarm_core::naming_game::llm_model::{LlmArchitecture, LlmNamingGame};
 
 use swarm_core::naming_game::network::CompleteGraph;
 
@@ -143,7 +143,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let py_status = Command::new("uv")
         .args(["run", "python", "python/plot_llm_naming_game.py"])
         .status()
-        .or_else(|_| Command::new("python3").arg("python/plot_llm_naming_game.py").status());
+        .or_else(|_| {
+            Command::new("python3")
+                .arg("python/plot_llm_naming_game.py")
+                .status()
+        });
 
     match py_status {
         Ok(st) if st.success() => {

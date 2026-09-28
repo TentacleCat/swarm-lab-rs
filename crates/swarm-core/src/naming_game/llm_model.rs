@@ -229,6 +229,26 @@ impl<G: Network> LlmNamingGame<G> {
             self.recent_history.pop_front();
         }
         self.recent_history.push_back(channel);
+        if llm_accepted == true {
+            self.inventories[speaker].clear();
+            self.inventories[hearer].clear();
+
+            self.inventories[speaker].insert(word);
+            self.inventories[hearer].insert(word);
+        } else {
+            self.inventories[hearer].insert(word);
+        }
+        self.time_step += 1;
+
+        LlmInteractionResult {
+            speaker,
+            hearer,
+            transmitted_word: word,
+            is_in_inventory,
+            llm_accepted,
+            channel,
+            collapse_triggered: llm_accepted,
+        }
     }
 
     /// ## 任务 3: 滑动窗口在库比例 $m(t)$ 与微观净漂移算子 $\Delta(t)$
@@ -238,7 +258,20 @@ impl<G: Network> LlmNamingGame<G> {
     /// - 若历史为空则返回 `0.0`。
     pub fn in_inventory_fraction(&self) -> f64 {
         // TODO: 计算在库事件的滑动窗口经验比例 m(t)
-        todo!("【关卡 7 - 任务 3】请实现滑动窗口在库比例 in_inventory_fraction");
+        if self.recent_history.is_empty() {
+            return 0.0;
+        }
+        let in_count = self
+            .recent_history
+            .iter()
+            .filter(|outcome| {
+                matches!(
+                    outcome,
+                    ChannelOutcome::TruePositive | ChannelOutcome::FalseNegative
+                )
+            })
+            .count();
+        in_count as f64 / self.recent_history.len() as f64
     }
 
     /// ### 2. 微观净有序漂移算子 $\Delta(t)$ (`drift_proxy`)
@@ -247,7 +280,8 @@ impl<G: Network> LlmNamingGame<G> {
     /// - 当 $\Delta(t) > 0$ 时，有序坍缩速率超越无序重涂速率，系统具有向单一共识收敛的微观驱动力。
     pub fn drift_proxy(&self) -> f64 {
         // TODO: 结合 in_inventory_fraction() 计算漂移算子
-        todo!("【关卡 7 - 任务 3】请实现微观净漂移算子 drift_proxy");
+        let mt = self.in_inventory_fraction();
+        mt * self.pi - (1.0 - mt) * self.phi
     }
 
     /// ## 任务 4: 理论两词平均场临界有序相判定指标 $R$
@@ -259,7 +293,7 @@ impl<G: Network> LlmNamingGame<G> {
     #[inline]
     pub fn ordering_parameter_r(&self) -> f64 {
         // TODO: 实现两词平均场有序度指标 R
-        todo!("【关卡 7 - 任务 4】请实现两词平均场临界有序相判定指标 ordering_parameter_r");
+        3.0 * self.pi - 2.0 * self.phi - 1.0
     }
 
     /// 智能体平均词汇库大小 bar{k}(t) = 1/N sum |P_i|
